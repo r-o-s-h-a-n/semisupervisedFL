@@ -1,9 +1,12 @@
 import os
+import json
 import numpy as np
 import functools
 import dataloader as dta
+import architectures as arc
 import tensorflow as tf
 import tensorflow_federated as tff
+import datetime
 
 
 def save_model_weights(model_fp, create_model_fn, federated_state):
@@ -20,6 +23,7 @@ def save_model_weights(model_fp, create_model_fn, federated_state):
         nothing, but saves model weights to disk
     '''
     model = create_model_fn()
+    print(type(model))
     tff.learning.assign_weights_to_keras_model(model, federated_state.model)
     model.save_weights(model_fp)
     return
@@ -49,7 +53,7 @@ class Algorithm(object):
         self.model_fp = self.opt['model_fp']
 
         self.dataloader = dta.DataLoader(
-                                        self.opt['experiment'],
+                                        self.opt['preprocess_fn'],
                                         self.opt['num_epochs'],
                                         self.opt['shuffle_buffer'],
                                         self.opt['max_client_examples'],
@@ -66,12 +70,19 @@ class SupervisedLearning(Algorithm):
     def __init__(self, opt):
         Algorithm.__init__(self, opt)
     
-    def solve(self, train_client_data, test_client_data):
+    def solve(self, train_client_data):
         '''
         Trains model in federated setting.
+
+        Arguments:
+            train_client_data: ClientData, federated training dataset
+        Returns:
+            nothing, but trains model and saves trained model weights.
         '''
         sample_batch = self.dataloader.get_sample_batch(train_client_data)
-        model_fn = functools.partial(self.model_fn, sample_batch)
+        keras_model = functools.partial(self.model_fn, self.opt['model_opt'])
+        model_fn = functools.partial(arc.create_tff_model_fn, keras_model, sample_batch)
+
         iterative_process = tff.learning.build_federated_averaging_process(model_fn)
         state = iterative_process.initialize()
 
@@ -87,21 +98,44 @@ class SupervisedLearning(Algorithm):
             state, metrics = iterative_process.next(state, federated_train_data)
             print('round {:2d}, metrics={}'.format(round_num, metrics))
 
-        save_model_weights(self.model_fp, self.model_fn, state)
+        save_model_weights(self.model_fp, keras_model, state)
         self.final_state = state
+        self.opt['results']['train_date'] = datetime.datetime.now()
         return
 
-    def evaluate(self, client_data, model_fp=None):
+    def evaluate(self, dataset, model_fp=None):
         '''
         Evaluates trained model in central server mode.
-        If model_fp, model filepath, is provided, will load the model from file and 
-        evaluate on that. Otherwise, will evaluate the model at the last federated
-        state.
-        '''
-        if model_fp:
-            model = load_model_weights(model_fp, self.model_fn)
-        else:
-            model = self.model_fn()
-            tff.learning.assign_weights_to_keras_model(model, self.final_state.model)
         
-        return model.evaluate(client_data)
+        Arguments:
+            dataset: tf Dataset, contains all the test set examples as a single 
+                    tf Dataset.
+            model_fp: (optional) str, if model filepath is provided, it will load 
+                    the model from file and evaluate on that. Otherwise, will 
+                    evaluate the model at the last federated state.
+
+        Returns:
+            Nothing, but writes accuracy to file.
+        '''
+        processed_data = self.dataloader.preprocess_dataset(dataset)
+        print(0, type(processed_data))
+
+        if model_fp:
+            model_fn = functools.partial(self.model_fn, self.opt['model_opt'])
+            keras_model = load_model_weights(model_fp, model_fn)
+        else:
+            keras_model = self.model_fn(self.opt['model_opt'])
+            tff.learning.assign_weights_to_keras_model(keras_model, self.final_state.model)
+        
+        print(1, type(keras_model))
+        # accuracy =  keras_model.evaluate(processed_data, as_supervised=True)
+        self.opt['results']['accuracy'] = keras_model.evaluate(processed_data)
+        self.opt['results']['evaluation_date'] = datetime.datetime.now()
+        
+        if self.opt['verbose']:
+            print(self.opt['results'])
+
+        with open(self.opt['evaluation_fp'], 'w') as f:
+            f.write(json.dumps(self.opt))
+        
+        return

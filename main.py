@@ -15,7 +15,7 @@ exp_config_file = os.path.join('.','config',args_opt.exp+'.py')
 config = imp.load_source("",exp_config_file).config
 config['exp_dir'] = exp_directory # the place where logs, models, and other stuff will be stored
 
-dataset_train, dataset_test = dta.get_client_data(config['dataset_name'],
+train_client_data, test_dataset = dta.get_client_data(config['dataset_name'],
                                                 config['mask_by'],
                                                 config['mask_ratios'],
                                                 config['sample_client_data']
@@ -25,6 +25,6 @@ experiment = getattr(exp, config['experiment'])(config)
 
 # TODO add saving and loading from checkpoint
 
-experiment.solve(dataset_train, dataset_test)
-experiment.evaluate(dataset_test)
+experiment.solve(train_client_data)
+experiment.evaluate(test_dataset)
 

@@ -7,16 +7,26 @@ config['dataset_name'] = 'emnist'
 config['mask_by'] = 'example'
 config['mask_ratios'] = {'supervised':0.2, 'unsupervised':0.0}
 config['sample_client_data'] = True
-config['shuffle_buffer'] = 500
+config['shuffle_buffer'] = 100
 config['batch_size'] = 128
 config['unsupervised'] = True
-config['max_client_examples'] = 10000 # randomly select max of this many examples on each client per iteration
-config['num_rounds'] = 10
-config['num_epochs'] = 10
-config['model_fn'] = arc.classifier_model_fn
-config['num_clients_per_round'] = 256
+config['max_client_examples'] = 1000 # randomly select max of this many examples on each client per iteration
+config['num_rounds'] = 1
+config['num_epochs'] = 1
+config['model_fn'] = arc.create_compiled_classifier_keras_model
+config['num_clients_per_round'] = 64
 config['model_fp'] = 'experiments/classifier.h5'
 config['preprocess_fn'] = dta.preprocess_classifier
+config['verbose'] = True
+
+model_opt = {}
+model_opt['learning_rate'] = 1.0
+model_opt['saved_model_fp'] = None
+
+config['model_opt'] = model_opt
+config['evaluation_fp'] = 'experiments/classifier.json'
+
+config['results'] = {}
 
 # set the parameters related to the training and testing set
 # data_train_opt = {} 

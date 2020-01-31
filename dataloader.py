@@ -178,34 +178,32 @@ def preprocess_autoencoder(dataset,
 
 class DataLoader(object):
     def __init__(self, 
-                experiment,
+                preprocess_fn,
                 num_epochs = 10, 
                 shuffle_buffer = 500, 
                 max_examples_per_client = 10000, 
                 batch_size = 128
                 ):
-        self.experiment = experiment
+        self.preprocess_fn = preprocess_fn
         self.num_epochs = num_epochs
         self.shuffle_buffer = shuffle_buffer
         self.max_examples_per_client = max_examples_per_client
         self.batch_size = batch_size
-
-    def make_federated_data(self, client_data, client_ids):
-        preprocess_fn = {'SupervisedLearning': preprocess_classifier, 
-                          'SelfSupervisedLearning': preprocess_autoencoder
-                        }
-
-        return [preprocess_fn[self.experiment](client_data.create_tf_dataset_for_client(x),
+      
+    def preprocess_dataset(self, dataset):
+        return self.preprocess_fn(dataset,
                                   self.num_epochs,
                                   self.shuffle_buffer,
                                   self.max_examples_per_client,
-                                  self.batch_size                          
+                                  self.batch_size
                                   )
-            for x in client_ids]
+
+    def make_federated_data(self, client_data, client_ids):
+        return [self.preprocess_dataset(client_data.create_tf_dataset_for_client(x)) for x in client_ids]
 
     def get_sample_batch(self, client_data):
-        preprocessed_example_dataset = self.make_federated_data(client_data, 
-                                                              [client_data.client_ids[0]]
-                                                              )[0]
+        preprocessed_example_dataset = self.preprocess_dataset(
+                  client_data.create_tf_dataset_for_client(client_data.client_ids[0]))
+
         return tf.nest.map_structure(
             lambda x: x.numpy(), iter(preprocessed_example_dataset).next())

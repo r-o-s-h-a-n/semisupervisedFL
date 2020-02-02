@@ -13,7 +13,7 @@ ENCODER_SIZE = 256
 def create_encoder_keras_model():
     model = tf.keras.models.Sequential([
         tf.keras.layers.Dense(
-            ENCODER_SIZE, activation=tf.nn.relu, input_shape=(784,))
+            ENCODER_SIZE, activation=tf.nn.relu, input_shape=(784,), name='encoder1')
     ])
     return  model
 
@@ -21,7 +21,7 @@ def create_encoder_keras_model():
 def create_decoder_keras_model():
     model = tf.keras.models.Sequential([
         tf.keras.layers.Dense(
-          784, activation=tf.nn.sigmoid, input_shape=(ENCODER_SIZE,))
+          784, activation=tf.nn.sigmoid, input_shape=(ENCODER_SIZE,), name='decoder1')
         ])
     return  model
 
@@ -29,50 +29,9 @@ def create_decoder_keras_model():
 def create_classifier_keras_model():
     model = tf.keras.models.Sequential([
         tf.keras.layers.Dense(
-        10, activation=tf.nn.softmax, input_shape=(ENCODER_SIZE,))
+        10, activation=tf.nn.softmax, input_shape=(ENCODER_SIZE,), name='classifier1')
         ])
     return model
-
-
-def create_compiled_autoencoder_keras_model():
-    model = tf.keras.models.Sequential([
-        create_encoder_keras_model(),
-        create_decoder_keras_model()
-        ])
-  
-    model.compile(
-        loss=tf.keras.losses.BinaryCrossentropy(),
-        optimizer=tf.keras.optimizers.Adadelta(learning_rate=1.0, rho=0.95),
-        metrics=[])
-    return model
-
-
-def create_compiled_classifier_keras_model(encoder_model):  
-    model = tf.keras.models.Sequential([
-        encoder_model,
-        create_classifier_keras_model()
-        ])
-  
-    model.compile(
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-        optimizer=tf.keras.optimizers.SGD(learning_rate=0.02),
-        metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
-    return model
-
-
-def autoencoder_model_fn(sample_autoencoder_batch):
-    keras_model = create_compiled_autoencoder_keras_model()
-    return tff.learning.from_compiled_keras_model(keras_model, sample_autoencoder_batch)
-
-
-def classifier_model_fn(sample_classifier_batch, saved_encoder_model=None):
-    encoder_model = create_encoder_keras_model()
-    
-    if saved_encoder_model:
-        encoder_model.load_model(saved_encoder_model)
-    
-    keras_model = create_compiled_classifier_keras_model(encoder_model)
-    return tff.learning.from_compiled_keras_model(keras_model, sample_classifier_batch)
 
 
 class Model(object):
@@ -98,11 +57,12 @@ class Model(object):
         Saves model weights to file from tff iteration state.
 
         Arguments:
+            model_fp: str,      file path to store model weights
             federated_state: tff.python.common_libs.anonymous_tuple.AnonymousTuple, 
                 the federated training state from which you wish to save the model weights.
 
         Returns:
-            nothing, but saves model weights to disk
+            nothing, but saves model weights
         '''
         keras_model = self()
         tff.learning.assign_weights_to_keras_model(keras_model, federated_state.model)
@@ -114,7 +74,7 @@ class Model(object):
         Loads the model weights to a new model object using create_model_fn.
         
         Arguments:
-            create_model_fn: fnc, function that creates the keras model.
+            model_fp: str,      file path where model weights are stored.
 
         Returns:
             model: tf.keras.Model, a keras model with weights initialized
@@ -125,6 +85,34 @@ class Model(object):
 
 
 class ClassifierModel(Model):
+    def __init__(self, opt):
+        self.opt = opt
+        self.learning_rate = opt['learning_rate']
+        self.saved_model_fp = opt['saved_model_fp']
+        Model.__init__(self, opt)
+
+    def __call__(self):
+        '''
+        Returns a compiled keras model.
+        '''
+        encoder_model = create_encoder_keras_model()
+    
+        if self.saved_model_fp:
+            encoder_model.load_weights(self.saved_model_fp, by_name=True)
+            
+        model = tf.keras.models.Sequential([
+            encoder_model,
+            create_classifier_keras_model()
+        ])
+      
+        model.compile(
+            loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+            optimizer=tf.keras.optimizers.SGD(learning_rate=self.learning_rate),
+            metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
+        return model
+    
+
+class AutoencoderModel(Model):
     def __init__(self, opt):
         self.opt = opt
         self.learning_rate = opt['learning_rate']
@@ -141,13 +129,12 @@ class ClassifierModel(Model):
             
         model = tf.keras.models.Sequential([
             encoder_model,
-            create_classifier_keras_model()
+            create_decoder_keras_model()
         ])
       
-        model.compile(
-            loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-            optimizer=tf.keras.optimizers.SGD(learning_rate=self.learning_rate),
-            metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
+        model.compile(loss=tf.keras.losses.BinaryCrossentropy(),
+                        optimizer=tf.keras.optimizers.Adadelta(self.learning_rate, rho=0.95),
+                        metrics=[tf.keras.metrics.MeanSquaredError()])
         return model
     
   

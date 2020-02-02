@@ -74,46 +74,31 @@ def mask_false(example, mask_type):
     example[key] = tf.convert_to_tensor(False)
     return example
 
-
-def mask_examples(client_data, mask_ratio, mask_type, seed=None):
+def mask_examples(client_data, mask_ratio, seed=None):
     '''
-    Masks mask_ratio fraction of examples uniformly randomly across all clients.
+    Masks mask_ratio fraction of randomly selected examples on each client.
 
     Args:
         client_data - ClientData object containing federated dataset
-        mask_ratio - float, fraction of total examples to be masked
+        mask_ratio - float, fraction of example labels to mask
     Returns:
         client_data - ClientData object, identical to client_data argument but 
-        with additional attribute `is_masked` boolean for each example
+        with additional attribute `mask` boolean for each example
     '''
-    assert mask_type in ('supervised', 'selfsupervised'), 'mask type must be `supervised` or `selfsupervised`'
-
     def get_example_ids_generator():
-      # generates unique tuple for each example of structure (client_id, example_id)
+      # counts number of examples per client and returns a tuple for each client id
+      # with the number of masked examples it should contain
       for client_id in client_data.client_ids:
-        for i, _ in enumerate(client_data.create_tf_dataset_for_client(client_id)):
-            yield (client_id, i)
+        for i, example in enumerate(client_data.create_tf_dataset_for_client(client_id)):
+          pass
+        yield (client_id, int(mask_ratio*i))
     
-    # generate example ids, shuffle, then select the ones to be masked
-    example_ids = [x for x in get_example_ids_generator()]
-    # np.random.RandomState(seed=seed).shuffle(example_ids)
-    np.random.shuffle(example_ids)
-    num_examples = len(example_ids)
-    masked_example_idxs = example_ids[:int(mask_ratio*num_examples)]
-
-    # convert example ids to a dict mapping client ids to a tensor of example ids chosen to be masked
-    masked_example_idxs_dict = collections.defaultdict(list)
-    for ex in masked_example_idxs:
-        client_id, example_id = ex
-        masked_example_idxs_dict[client_id].append(example_id)
-    
-    for client_id in masked_example_idxs_dict:
-        masked_example_idxs_dict[client_id] = tf.convert_to_tensor(masked_example_idxs_dict[client_id], dtype=tf.int64)
+    client_id_to_mask_idx = {x[0]:x[1] for x in get_example_ids_generator()}
 
     def preprocess_fn(dataset, client_id):
-        return dataset.enumerate().map(lambda i, x: mask_true(x, mask_type)
-                                       if tf.reduce_any(tf.math.equal(i, masked_example_idxs_dict[client_id]))
-                                       else mask_false(x, mask_type))
+        return dataset.shuffle(buffer_size=SHUFFLE_BUFFER, seed=seed).enumerate().map(lambda i, x: mask_true(x)
+                                                                                  if i < client_id_to_mask_idx[client_id]
+                                                                                  else mask_false(x))
         
     tff.python.common_libs.py_typecheck.check_callable(preprocess_fn)
 
@@ -177,7 +162,7 @@ def preprocess_autoencoder(dataset,
     return (tf.reshape(element['pixels'], [-1]),
           tf.reshape(element['pixels'], [-1]))
 
-  return dataset.filter(lambda x: not x['is_masked_selfsupervised'] if 'is_masked_selfsupervised' in x else True).repeat(
+  return dataset.filter(lambda x: not x['is_masked_unsupervised'] if 'is_masked_unsupervised' in x else True).repeat(
       num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
 
 

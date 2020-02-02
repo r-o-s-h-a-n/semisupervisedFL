@@ -23,7 +23,7 @@ config['num_rounds'] = 1
 config['num_clients_per_round'] = 64
 config['learning_rate'] = 1.0
 
-config['saved_model_fp'] = None
+config['saved_model_fp'] = 'logs/autoencoder/autoencoder.h5'
 config['model_fp'] = 'classifier.h5'
 config['evaluation_fp'] = 'classifier.json'
 

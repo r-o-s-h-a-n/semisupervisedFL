@@ -11,23 +11,16 @@ import datetime
 
 class Algorithm(object):
     def __init__(self, opt):
-        self.set_log_dir(opt['log_dir'])
         self.opt = opt
+
+        self.set_log_dir(opt['log_dir'])
+        self.model_fp = self.opt['model_fp']
+        
         self.num_rounds = self.opt['num_rounds']
         self.num_clients_per_round = self.opt['num_clients_per_round']
-        self.model_fp = self.opt['model_fp']
-
-        model_fns = {'classifier': mdl.ClassifierModel,
-                    # 'autoencoder': mdl.create_compiled_autoencoder_keras_model
-                    }
-
-        preprocess_fns = {'classifier': dta.preprocess_classifier,
-                    # 'autoencoder': dta.preprocess_autoencoder
-                    }
-
-        self.keras_model_fn = model_fns[self.opt['model_fn']](self.opt)
-        self.preprocess_fn = preprocess_fns[self.opt['preprocess_fn']]
-
+        
+        self.keras_model_fn = getattr(mdl, self.opt['model_fn'])(self.opt)
+        self.preprocess_fn = getattr(dta, self.opt['preprocess_fn'])
         self.dataloader = dta.DataLoader(
                                         self.preprocess_fn,
                                         self.opt['num_epochs'],
@@ -100,7 +93,15 @@ class SupervisedLearning(Algorithm):
             keras_model = self.keras_model_fn()
             tff.learning.assign_weights_to_keras_model(keras_model, self.final_state.model)
         
-        self.opt['results']['accuracy'] = keras_model.evaluate(processed_data)[1].item()
+        metrics = keras_model.evaluate(processed_data)
+        
+        if not keras_model.metrics:
+            self.opt['results']['loss'] = metrics.item()
+        else:
+            self.opt['results']['loss'] = metrics[0].item()
+            for i, m in enumerate(keras_model.metrics):
+                self.opt['results'][m.name] = metrics[i+1].item()
+
         self.opt['results']['evaluation_date'] = str(datetime.datetime.now())
         
         if self.opt['verbose']:

@@ -86,7 +86,7 @@ class Model(object):
     def __call__(self):
         raise NotImplementedError('must define a class for your model that inherits \
                                   from ModelFunction and implement __call__ method. \
-                                    The method must return a compiled keras model.
+                                    The method must return a compiled keras model. \
                                   ')
 
     def create_tff_model_fn(self, sample_batch):

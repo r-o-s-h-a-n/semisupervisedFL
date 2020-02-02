@@ -8,7 +8,6 @@ import tensorflow as tf
 import tensorflow_federated as tff
 
 from tensorflow_federated.python.common_libs import py_typecheck
-np.random.seed(0)
 
 
 def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False):

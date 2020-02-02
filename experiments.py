@@ -3,67 +3,42 @@ import json
 import numpy as np
 import functools
 import dataloader as dta
-import architectures as arc
+import models as mdl
 import tensorflow as tf
 import tensorflow_federated as tff
 import datetime
-
-
-def save_model_weights(model_fp, create_model_fn, federated_state):
-    '''
-    Saves model weights to file from tff iteration state.
-
-    Arguments:
-        model_fp: str, filepath to save the model.
-        create_model_fn: fnc, function that creates the keras model.
-        federated_state: tff.python.common_libs.anonymous_tuple.AnonymousTuple, 
-            the federated training state from which you wish to save the model weights.
-
-    Returns:
-        nothing, but saves model weights to disk
-    '''
-    model = create_model_fn()
-    print(type(model))
-    tff.learning.assign_weights_to_keras_model(model, federated_state.model)
-    model.save_weights(model_fp)
-    return
-
-
-def load_model_weights(model_fp, create_model_fn):
-    '''
-    Loads the model weights to a new model object using create_model_fn.
-    
-    Arguments:
-        model_fp: String, filepath to the saved model weights.
-        create_model_fn: fnc, function that creates the keras model.
-
-    Returns:
-        model: tf.keras.Model, a keras model with weights initialized
-    '''
-    return create_model_fn().load_model(model_fp)
     
 
 class Algorithm(object):
     def __init__(self, opt):
-        self.set_experiment_dir(opt['exp_dir'])
+        self.set_log_dir(opt['log_dir'])
         self.opt = opt
         self.num_rounds = self.opt['num_rounds']
-        self.model_fn = self.opt['model_fn']
         self.num_clients_per_round = self.opt['num_clients_per_round']
         self.model_fp = self.opt['model_fp']
 
+        model_fns = {'classifier': mdl.ClassifierModel,
+                    # 'autoencoder': mdl.create_compiled_autoencoder_keras_model
+                    }
+
+        preprocess_fns = {'classifier': dta.preprocess_classifier,
+                    # 'autoencoder': dta.preprocess_autoencoder
+                    }
+
+        self.keras_model_fn = model_fns[self.opt['model_fn']](self.opt)
+        self.preprocess_fn = preprocess_fns[self.opt['preprocess_fn']]
+
         self.dataloader = dta.DataLoader(
-                                        self.opt['preprocess_fn'],
+                                        self.preprocess_fn,
                                         self.opt['num_epochs'],
                                         self.opt['shuffle_buffer'],
-                                        self.opt['max_client_examples'],
                                         self.opt['batch_size']
                                         )
 
-    def set_experiment_dir(self,directory_path):
-        self.exp_dir = directory_path
-        if (not os.path.isdir(self.exp_dir)):
-            os.makedirs(self.exp_dir)
+    def set_log_dir(self,directory_path):
+        self.log_dir = directory_path
+        if (not os.path.isdir(self.log_dir)):
+            os.makedirs(self.log_dir)
 
 
 class SupervisedLearning(Algorithm):
@@ -80,8 +55,7 @@ class SupervisedLearning(Algorithm):
             nothing, but trains model and saves trained model weights.
         '''
         sample_batch = self.dataloader.get_sample_batch(train_client_data)
-        keras_model = functools.partial(self.model_fn, self.opt['model_opt'])
-        model_fn = functools.partial(arc.create_tff_model_fn, keras_model, sample_batch)
+        model_fn = functools.partial(self.keras_model_fn.create_tff_model_fn, sample_batch)
 
         iterative_process = tff.learning.build_federated_averaging_process(model_fn)
         state = iterative_process.initialize()
@@ -98,9 +72,10 @@ class SupervisedLearning(Algorithm):
             state, metrics = iterative_process.next(state, federated_train_data)
             print('round {:2d}, metrics={}'.format(round_num, metrics))
 
-        save_model_weights(self.model_fp, keras_model, state)
+        model_fp = os.path.join(self.opt['log_dir'], self.opt['model_fp'])
+        self.keras_model_fn.save_model_weights(model_fp, state)
         self.final_state = state
-        self.opt['results']['train_date'] = datetime.datetime.now()
+        self.opt['results']['train_date'] = str(datetime.datetime.now())
         return
 
     def evaluate(self, dataset, model_fp=None):
@@ -118,24 +93,21 @@ class SupervisedLearning(Algorithm):
             Nothing, but writes accuracy to file.
         '''
         processed_data = self.dataloader.preprocess_dataset(dataset)
-        print(0, type(processed_data))
 
         if model_fp:
-            model_fn = functools.partial(self.model_fn, self.opt['model_opt'])
-            keras_model = load_model_weights(model_fp, model_fn)
+            keras_model = self.keras_model_fn.load_model_weights(model_fp)
         else:
-            keras_model = self.model_fn(self.opt['model_opt'])
+            keras_model = self.keras_model_fn()
             tff.learning.assign_weights_to_keras_model(keras_model, self.final_state.model)
         
-        print(1, type(keras_model))
-        # accuracy =  keras_model.evaluate(processed_data, as_supervised=True)
-        self.opt['results']['accuracy'] = keras_model.evaluate(processed_data)
-        self.opt['results']['evaluation_date'] = datetime.datetime.now()
+        self.opt['results']['accuracy'] = keras_model.evaluate(processed_data)[1].item()
+        self.opt['results']['evaluation_date'] = str(datetime.datetime.now())
         
         if self.opt['verbose']:
-            print(self.opt['results'])
+            print('\n\n', self.opt['results'])
 
-        with open(self.opt['evaluation_fp'], 'w') as f:
+        evaluation_fp = os.path.join(self.opt['log_dir'], self.opt['evaluation_fp'])
+        with open(evaluation_fp, 'w') as f:
             f.write(json.dumps(self.opt))
-        
+
         return

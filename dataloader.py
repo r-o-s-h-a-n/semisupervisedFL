@@ -11,19 +11,19 @@ from tensorflow_federated.python.common_libs import py_typecheck
 np.random.seed(0)
 
 
-def get_client_data(dataset_nm, mask_by, mask_ratios, sample_client_data=False):
+def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False):
   '''
-  dataset_nm -- str,          name of dataset
+  dataset_name -- str,          name of dataset
   mask_by -- str,             indicates if we will mask by clients or examples
   mask_ratios -- dict(float), gives mask ratios for models 
                               is of format {'supervised':0.0, 'unsupervised':0.0}
   sample_dataset -- bool,     if true, will return a small ClientData dataset
                               containing 100 clients with max 100 examples each
   '''
-  assert dataset_nm in ('emnist')
+  assert dataset_name in ('emnist')
   assert mask_by in ('client', 'example'), 'mask_by must be `client` or `example`'
 
-  if dataset_nm == 'emnist':
+  if dataset_name == 'emnist':
     train_set, test_set = tff.simulation.datasets.emnist.load_data()
 
   if sample_client_data:
@@ -36,13 +36,20 @@ def get_client_data(dataset_nm, mask_by, mask_ratios, sample_client_data=False):
     else:
       train_set = mask_clients(train_set, mask_ratios[s], s)
 
-  # flatten test set as a single tf dataset
   test_set = test_set.create_tf_dataset_from_all_clients()
 
   return train_set, test_set
 
 
 def get_sample_client_data(client_data, num_clients, num_examples):
+    '''
+    Generates a client dataset with maximum `num_clients` number of clients and 
+    `num_examples` number of examples per client
+
+    client_data: ClientData, client dataset
+    num_clients: int,         maximum number of clients in returned dataset
+    num_examples: int,        maximum number of examples per client in returned dataset
+    '''
     def get_dataset(client_id):
       return client_data.create_tf_dataset_for_client(client_id).take(num_examples)
 
@@ -50,12 +57,20 @@ def get_sample_client_data(client_data, num_clients, num_examples):
 
 
 def mask_true(example, mask_type):
+    '''
+    Adds Boolean mask attribute, such as `is_masked_supervised`, to a 
+    single example and sets to True.
+    '''
     key = 'is_masked_'+mask_type
     example[key] = tf.convert_to_tensor(True)
     return example
 
 
 def mask_false(example, mask_type):
+    '''
+    Adds Boolean mask attribute, such as `is_masked_supervised`, to a 
+    single example and sets to False.
+    '''
     key = 'is_masked_'+mask_type
     example[key] = tf.convert_to_tensor(False)
     return example
@@ -144,36 +159,27 @@ def mask_clients(client_data, mask_ratio, mask_type, seed=None):
 def preprocess_classifier(dataset, 
                         num_epochs, 
                         shuffle_buffer, 
-                        max_examples_per_client, 
                         batch_size):
 
   def element_fn(element):
-    return collections.OrderedDict([
-          ('x', tf.reshape(element['pixels'], [-1])),
-          ('y', tf.reshape(element['label'], [1]))
-      ])
+    return (tf.reshape(element['pixels'], [-1]),
+            tf.reshape(element['label'], [1]))
 
-  # filter by `is masked` if `is masked` is an attribute of the element
   return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
-      num_epochs).map(element_fn).shuffle(shuffle_buffer).take(
-          max_examples_per_client).batch(batch_size)
+      num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
 
 
 def preprocess_autoencoder(dataset,
                         num_epochs, 
                         shuffle_buffer, 
-                        max_examples_per_client, 
                         batch_size):
 
   def element_fn(element):
-    return collections.OrderedDict([
-          ('x', tf.reshape(element['pixels'], [-1])),
-          ('y', tf.reshape(element['pixels'], [-1])),
-      ])
+    return (tf.reshape(element['pixels'], [-1]),
+          tf.reshape(element['pixels'], [-1]))
 
   return dataset.filter(lambda x: not x['is_masked_selfsupervised'] if 'is_masked_selfsupervised' in x else True).repeat(
-      num_epochs).map(element_fn).shuffle(shuffle_buffer).take(
-          max_examples_per_client).batch(batch_size)
+      num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
 
 
 class DataLoader(object):
@@ -181,27 +187,33 @@ class DataLoader(object):
                 preprocess_fn,
                 num_epochs = 10, 
                 shuffle_buffer = 500, 
-                max_examples_per_client = 10000, 
                 batch_size = 128
                 ):
         self.preprocess_fn = preprocess_fn
         self.num_epochs = num_epochs
         self.shuffle_buffer = shuffle_buffer
-        self.max_examples_per_client = max_examples_per_client
         self.batch_size = batch_size
       
     def preprocess_dataset(self, dataset):
+        '''
+        Preprocesses a single tf Dataset.
+        '''
         return self.preprocess_fn(dataset,
                                   self.num_epochs,
                                   self.shuffle_buffer,
-                                  self.max_examples_per_client,
                                   self.batch_size
                                   )
 
     def make_federated_data(self, client_data, client_ids):
+        '''
+        Preprocesses a federated dataset containing examples corresponding to client_ids provided.
+        '''
         return [self.preprocess_dataset(client_data.create_tf_dataset_for_client(x)) for x in client_ids]
 
     def get_sample_batch(self, client_data):
+        '''
+        Generates a single batch of data from a dataset.
+        '''
         preprocessed_example_dataset = self.preprocess_dataset(
                   client_data.create_tf_dataset_for_client(client_data.client_ids[0]))
 

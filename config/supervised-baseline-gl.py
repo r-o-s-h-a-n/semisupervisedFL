@@ -1,6 +1,6 @@
 config = {}
 
-config['experiment'] = 'SupervisedLearning-Baseline'
+config['experiment'] = 'SupervisedLearning'
 config['verbose'] = True
 
 dataset = {}
@@ -19,7 +19,7 @@ config['num_epochs'] = 1
 
 # training
 config['model_fn'] = 'ClassifierModel'
-config['num_rounds'] = 1
+config['num_rounds'] = 40
 config['num_clients_per_round'] = 64
 config['learning_rate'] = 1.0
 

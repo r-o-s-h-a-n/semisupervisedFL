@@ -39,8 +39,11 @@ class Model(object):
     Your model must inherit from this class and specify a __call__ method which 
     returns a compiled tf model
     '''
-    def __init__(self, opt):
-        return
+    def __init__(self, opt, hps, hp_classes):
+        self.opt = opt
+        self.optimizer = getattr(tf.keras.optimizers, hps[hp_classes['optimizer']])
+        self.learning_rate = hps[hp_classes['learning_rate']]
+        # self.saved_model_fp = opt['saved_model_fp']
 
     def __call__(self):
         raise NotImplementedError('must define a class for your model that inherits \
@@ -85,11 +88,8 @@ class Model(object):
 
 
 class ClassifierModel(Model):
-    def __init__(self, opt):
-        self.opt = opt
-        self.learning_rate = opt['learning_rate']
-        self.saved_model_fp = opt['saved_model_fp']
-        Model.__init__(self, opt)
+    def __init__(self, opt, hp, hp_classes):
+        Model.__init__(self, opt, hp, hp_classes)
 
     def __call__(self):
         '''
@@ -97,8 +97,8 @@ class ClassifierModel(Model):
         '''
         encoder_model = create_encoder_keras_model()
     
-        if self.saved_model_fp:
-            encoder_model.load_weights(self.saved_model_fp, by_name=True)
+        # if self.saved_model_fp:
+        #     encoder_model.load_weights(self.saved_model_fp, by_name=True)
             
         model = tf.keras.models.Sequential([
             encoder_model,
@@ -107,25 +107,23 @@ class ClassifierModel(Model):
       
         model.compile(
             loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-            optimizer=tf.keras.optimizers.SGD(learning_rate=self.learning_rate),
+            optimizer=self.optimizer(learning_rate=self.learning_rate),
             metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
         return model
     
 
 class AutoencoderModel(Model):
-    def __init__(self, opt):
-        self.opt = opt
-        self.learning_rate = opt['learning_rate']
-        Model.__init__(self, opt)
+    def __init__(self, opt, hp, hp_classes):
+        Model.__init__(self, opt, hp, hp_classes)
 
-    def __call__(self, saved_encoder_model=None):
+    def __call__(self):
         '''
         Returns a compiled keras model.
         '''
         encoder_model = create_encoder_keras_model()
     
-        if saved_encoder_model:
-            encoder_model.load_weights(saved_encoder_model)
+        # if self.saved_model_fp:
+        #     encoder_model.load_weights(self.saved_model_fp)
             
         model = tf.keras.models.Sequential([
             encoder_model,
@@ -133,7 +131,7 @@ class AutoencoderModel(Model):
         ])
       
         model.compile(loss=tf.keras.losses.BinaryCrossentropy(),
-                        optimizer=tf.keras.optimizers.Adadelta(self.learning_rate, rho=0.95),
+                        optimizer=self.optimizer(learning_rate=self.learning_rate),
                         metrics=[tf.keras.metrics.MeanSquaredError()])
         return model
     

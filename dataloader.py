@@ -19,6 +19,8 @@ def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False
   sample_dataset -- bool,     if true, will return a small ClientData dataset
                               containing 100 clients with max 100 examples each
   '''
+  print(dataset_name, mask_by, mask_ratios, sample_client_data)
+
   assert dataset_name in ('emnist')
   assert mask_by in ('client', 'example'), 'mask_by must be `client` or `example`'
 
@@ -30,9 +32,9 @@ def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False
     test_set = get_sample_client_data(test_set, 100, 100)
 
   for s in mask_ratios:
-    if mask_by == 'examples':
+    if mask_by == 'example':
       train_set = mask_examples(train_set, mask_ratios[s], s)
-    else:
+    elif mask_by == 'client':
       train_set = mask_clients(train_set, mask_ratios[s], s)
 
   test_set = test_set.create_tf_dataset_from_all_clients()
@@ -74,7 +76,8 @@ def mask_false(example, mask_type):
     example[key] = tf.convert_to_tensor(False)
     return example
 
-def mask_examples(client_data, mask_ratio, seed=None):
+
+def mask_examples(client_data, mask_ratio, mask_type, seed=None):
     '''
     Masks mask_ratio fraction of randomly selected examples on each client.
 
@@ -89,16 +92,16 @@ def mask_examples(client_data, mask_ratio, seed=None):
       # counts number of examples per client and returns a tuple for each client id
       # with the number of masked examples it should contain
       for client_id in client_data.client_ids:
-        for i, example in enumerate(client_data.create_tf_dataset_for_client(client_id)):
+        for i, _ in enumerate(client_data.create_tf_dataset_for_client(client_id)):
           pass
         yield (client_id, int(mask_ratio*i))
     
     client_id_to_mask_idx = {x[0]:x[1] for x in get_example_ids_generator()}
 
     def preprocess_fn(dataset, client_id):
-        return dataset.shuffle(buffer_size=SHUFFLE_BUFFER, seed=seed).enumerate().map(lambda i, x: mask_true(x)
+        return dataset.shuffle(buffer_size=500, seed=seed).enumerate().map(lambda i, x: mask_true(x, mask_type)
                                                                                   if i < client_id_to_mask_idx[client_id]
-                                                                                  else mask_false(x))
+                                                                                  else mask_false(x, mask_type))
         
     tff.python.common_libs.py_typecheck.check_callable(preprocess_fn)
 

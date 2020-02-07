@@ -19,8 +19,6 @@ def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False
   sample_dataset -- bool,     if true, will return a small ClientData dataset
                               containing 100 clients with max 100 examples each
   '''
-  print(dataset_name, mask_by, mask_ratios, sample_client_data)
-
   assert dataset_name in ('emnist')
   assert mask_by in ('client', 'example'), 'mask_by must be `client` or `example`'
 

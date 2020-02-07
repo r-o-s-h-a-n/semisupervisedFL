@@ -39,10 +39,10 @@ class Model(object):
     Your model must inherit from this class and specify a __call__ method which 
     returns a compiled tf model
     '''
-    def __init__(self, opt, hps, hp_classes):
-        self.opt = opt
-        self.optimizer = getattr(tf.keras.optimizers, hps[hp_classes['optimizer']])
-        self.learning_rate = hps[hp_classes['learning_rate']]
+    def __init__(self, ph):
+        self.ph=ph
+        self.optimizer = getattr(tf.keras.optimizers, ph['optimizer'])
+        self.learning_rate = ph['learning_rate']
         # self.saved_model_fp = opt['saved_model_fp']
 
     def __call__(self):
@@ -88,8 +88,8 @@ class Model(object):
 
 
 class ClassifierModel(Model):
-    def __init__(self, opt, hp, hp_classes):
-        Model.__init__(self, opt, hp, hp_classes)
+    def __init__(self, ph):
+        Model.__init__(self, ph)
 
     def __call__(self):
         '''
@@ -113,8 +113,8 @@ class ClassifierModel(Model):
     
 
 class AutoencoderModel(Model):
-    def __init__(self, opt, hp, hp_classes):
-        Model.__init__(self, opt, hp, hp_classes)
+    def __init__(self, ph):
+        Model.__init__(self, ph)
 
     def __call__(self):
         '''

@@ -1,3 +1,6 @@
+### DEPRECATED ###
+
+
 config = {}
 
 config['experiment'] = 'SupervisedLearning'

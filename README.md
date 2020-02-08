@@ -12,10 +12,10 @@ and you're good to go!
 To run an existing experiment, simply run `python main.py --exp <experiment_name>`. For example to run a simple classifier on the EMNIST dataset, run `python main.py --exp supervised`. The attribute `experiment_name` must correspond to a config file in the folder `configs`. 
 
 ### Monitor results in Tensorboard
-To view the results in Tensorboard, run `tensorboard --logdir=logs/<experiment_name> --port=<port number>`. If running locally, follow the instructions in terminal to connect to `http:localhost:<port number>`. If running remotely, set up port forwarding by running the following on your local machine: `ssh -NfL <port number>:localhost:<port number> -i <path to pem file> <username>@<remote IP address>`. Then go to `http:localhost:<port number>` locally.
+To view the results in Tensorboard, run `tensorboard --logdir=logs/<experiment_name> --port=<port number>`. If running locally, follow the instructions in terminal to connect to `http://localhost:<port number>`. If running remotely, set up port forwarding by running the following on your local machine: `ssh -NfL <port number>:localhost:<port number> -i <path to pem file> <username>@<remote IP address>`. Then go to `http://localhost:<port number>` locally.
 
 Note: At the time of writing this README, Tensorboard only runs on the latest stable release of Tensorflow, and breaks on the nightly release of Tensorflow. To run Tensorboard:
-1. Deactivate any currently running virtual environments by running `deactivate`
+1. Deactivate any currently active virtual environments by running `deactivate`
 2. Create a new virtual environment for Tensorboard by running `virtualenv tboard`
 3. Run `source setup_tboard.sh`
 

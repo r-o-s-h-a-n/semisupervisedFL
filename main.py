@@ -23,7 +23,8 @@ ph['log_dir'] = log_directory # set log directory
 ph._init_hparams()
 
 # iterate through cartesian product of hyperparameter sets and run experiment
-for i, hparams in enumerate(ph.gen_hparam_cartesian_product()):
-    ph.set_hparams(hparams, i)
+hparam_sets = list(ph.gen_hparam_cartesian_product())
+for i in range(ph['run_number'], len(hparam_sets)):
+    ph.set_hparams(hparam_sets[i], i)
     experiment = getattr(exp, ph['experiment'])(ph)
     experiment.run()

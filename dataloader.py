@@ -92,7 +92,7 @@ def mask_examples(client_data, mask_ratio, mask_type, seed=None):
       for client_id in client_data.client_ids:
         for i, _ in enumerate(client_data.create_tf_dataset_for_client(client_id)):
           pass
-        yield (client_id, int(mask_ratio*i))
+        yield (client_id, int(mask_ratio*(i+1)))
     
     client_id_to_mask_idx = {x[0]:x[1] for x in get_example_ids_generator()}
 

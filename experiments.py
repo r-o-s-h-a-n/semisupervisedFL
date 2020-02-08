@@ -11,11 +11,16 @@ from tensorboard.plugins.hparams import api as hp
     
 
 class Algorithm(object):
+    '''
+    Basic experimental loop algorithm. Must define a class that inherits from this
+    and provides a `run` method which performs the experiment.
+    '''
+
     def __init__(self, ph):
         self.ph = ph
 
         self.log_every = self.ph['log_every']
-        self.run_number = self.ph['run_number']
+        self.curr_run_number = self.ph['curr_run_number']
         self.model_fp = self.ph['model_fp']
         
         self.keras_model_fn = getattr(mdl, self.ph['model_fn'])(self.ph)
@@ -23,6 +28,9 @@ class Algorithm(object):
 
 
 class SupervisedLearningFL(Algorithm):
+    '''
+    Federated supervised learning experiment loop. This includes self-supervised training.
+    '''
     def __init__(self, ph):
         Algorithm.__init__(self, ph)
         self.num_rounds = self.ph['num_rounds']
@@ -35,7 +43,7 @@ class SupervisedLearningFL(Algorithm):
                                 )
     
     def run(self):
-        run_dir = os.path.join(self.ph['log_dir'], 'run_{}'.format(str(self.ph['run_number'])))
+        run_dir = os.path.join(self.ph['log_dir'], 'run_{}'.format(str(self.ph['curr_run_number'])))
 
         # set up tensorboard summary writer scope
         with tf.summary.create_file_writer(run_dir).as_default():
@@ -84,7 +92,7 @@ class SupervisedLearningFL(Algorithm):
             tf.summary.scalar('test_accuracy', test_accuracy, step=round_num)
             tf.summary.scalar('test_loss', test_loss, step=round_num)
 
-        model_fp = os.path.join(self.ph['log_dir'], self.ph['model_fp'].format(self.run_number))
+        model_fp = os.path.join(self.ph['log_dir'], self.ph['model_fp'].format(self.curr_run_number))
         self.keras_model_fn.save_model_weights(model_fp, state)
         return
 
@@ -126,6 +134,9 @@ class SupervisedLearningFL(Algorithm):
 
 
 class SupervisedLearningCentral(Algorithm):
+    '''
+    Performs the central server supervised learning experiment loop.
+    '''
     def __init__(self, ph):
         Algorithm.__init__(self, ph)
         self.dataloader = dta.DataLoader(
@@ -137,7 +148,7 @@ class SupervisedLearningCentral(Algorithm):
         self.num_epochs = self.ph['num_epochs']
 
     def run(self):
-        run_dir = os.path.join(self.ph['log_dir'], 'run_{}'.format(str(self.ph['run_number'])))
+        run_dir = os.path.join(self.ph['log_dir'], 'run_{}'.format(str(self.ph['curr_run_number'])))
 
         # set up tensorboard summary writer scope
         with tf.summary.create_file_writer(run_dir).as_default():
@@ -182,42 +193,6 @@ class SupervisedLearningCentral(Algorithm):
             print('\nepoch {:2d}, train accuracy={} train loss={} test accuracy={} test loss={}'.format(
                                 epoch, train_accuracy, train_loss, test_accuracy, test_loss))
 
-        model_fp = os.path.join(self.ph['log_dir'], self.ph['model_fp'].format(self.run_number))
+        model_fp = os.path.join(self.ph['log_dir'], self.ph['model_fp'].format(self.curr_run_number))
         model.save_weights(model_fp)
         return
-
-    def evaluate_central(self, dataset, state):
-        '''
-        Evaluates a model in central server mode.
-        
-        Arguments:
-            dataset: tf Dataset, contains all the test set examples as a single 
-                    tf Dataset.
-            state: tff state, the federated training state of the model. 
-                    Contains model weights
-
-        Returns:
-            accuracy of model in state on dataset provided
-        '''
-        keras_model = self.keras_model_fn()
-        tff.learning.assign_weights_to_keras_model(keras_model, state.model)
-
-        metrics = keras_model.evaluate(dataset)
-        return (metrics[0].item(), metrics[1].item())
-
-    def evaluate_saved_model(self, dataset, model_fp=None):
-        '''
-        Evaluates trained model in central server mode.
-        
-        Arguments:
-            dataset: tf Dataset, contains all the test set examples as a single 
-                    tf Dataset.
-            model_fp: str, if model filepath is provided, it will load 
-                    the model from file and evaluate on that. Otherwise, will 
-                    evaluate the model at the last federated state.
-
-        Returns:
-            Nothing, but writes accuracy to file.
-        '''
-        keras_model = self.keras_model_fn.load_model_weights(model_fp)
-        return keras_model.evaluate(dataset)

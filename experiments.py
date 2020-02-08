@@ -24,7 +24,7 @@ class Algorithm(object):
         self.model_fp = self.ph['model_fp']
         
         self.keras_model_fn = getattr(mdl, self.ph['model_fn'])(self.ph)
-        self.preprocess_fn = getattr(dta, self.ph['preprocess_fn'])
+        self.preprocess_fn = self.keras_model_fn.preprocess
 
 
 class SupervisedLearningFL(Algorithm):

@@ -141,32 +141,6 @@ def mask_clients(client_data, mask_ratio, mask_type, seed=None):
     return tff.simulation.client_data.ConcreteClientData(client_data.client_ids, get_dataset)
 
 
-def preprocess_classifier(dataset, 
-                        num_epochs, 
-                        shuffle_buffer, 
-                        batch_size):
-
-  def element_fn(element):
-    return (tf.reshape(element['pixels'], [-1]),
-            tf.reshape(element['label'], [1]))
-
-  return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
-      num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
-
-
-def preprocess_autoencoder(dataset,
-                        num_epochs, 
-                        shuffle_buffer, 
-                        batch_size):
-
-  def element_fn(element):
-    return (tf.reshape(element['pixels'], [-1]),
-          tf.reshape(element['pixels'], [-1]))
-
-  return dataset.filter(lambda x: not x['is_masked_unsupervised'] if 'is_masked_unsupervised' in x else True).repeat(
-      num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
-
-
 class DataLoader(object):
     def __init__(self, 
                 preprocess_fn,

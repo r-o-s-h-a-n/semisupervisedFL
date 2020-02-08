@@ -22,5 +22,5 @@ Note: At the time of writing this README, Tensorboard only runs on the latest st
 ### Build a new experiment
 To build a new experiment you may wish to make the following modifications:
 1. Add a new config file to `config/` for a new experiment specifying different hyperparameters you want to try as well as model and data configurations.
-2. Add a new model to the file `models.py`. A new model must inherit from the class `Model` and specify a `__call__` method. The `__call__` method must return a compiled tf keras model.
-3. Add a new experiment loop algorithm to `experiments.py`. Currently only a supervised training experiment loop is specified. It is likely that this algorithm can be extended to self supervised and semisupervised settings by just swapping the model in `models.py`. In addition, if you are using a new model that has different data inputs and targets, you will need to specify a new preprocess function in `dataloader.py`. 
+2. Add a new model to the file `models.py`. A new model must inherit from the class `Model` and specify a `__call__` method and a `preprocess` method. The `__call__` method must return a compiled tf keras model. The `preprocess` method must preprocess a tf Dataset to be trained by the model.
+3. Add a new experiment loop algorithm to `experiments.py`. Currently only a supervised training experiment loop is specified. It is likely that this algorithm can be extended to self supervised and semisupervised settings by just swapping the model in `models.py`.

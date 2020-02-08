@@ -6,7 +6,7 @@ import numpy as np
 import six
 import tensorflow as tf
 import tensorflow_federated as tff
-
+from models.model import Model
 
 ENCODER_SIZE = 256
 
@@ -34,60 +34,7 @@ def create_classifier_keras_model():
     return model
 
 
-class Model(object):
-    '''
-    Your model must inherit from this class and specify a __call__ method which 
-    returns a compiled tf model
-    '''
-    def __init__(self, ph):
-        self.ph=ph
-        self.optimizer = getattr(tf.keras.optimizers, ph['optimizer'])
-        self.learning_rate = ph['learning_rate']
-        # self.saved_model_fp = opt['saved_model_fp']
-
-    def __call__(self):
-        raise NotImplementedError('must define a class for your model that inherits \
-                                  from ModelFunction and implement __call__ method. \
-                                    The method must return a compiled keras model. \
-                                  ')
-
-    def create_tff_model_fn(self, sample_batch):
-        keras_model = self()
-        return tff.learning.from_compiled_keras_model(keras_model, sample_batch)
-
-    def save_model_weights(self, model_fp, federated_state):
-        '''
-        Saves model weights to file from tff iteration state.
-
-        Arguments:
-            model_fp: str,      file path to store model weights
-            federated_state: tff.python.common_libs.anonymous_tuple.AnonymousTuple, 
-                the federated training state from which you wish to save the model weights.
-
-        Returns:
-            nothing, but saves model weights
-        '''
-        keras_model = self()
-        tff.learning.assign_weights_to_keras_model(keras_model, federated_state.model)
-        keras_model.save_weights(model_fp)
-        return
-
-    def load_model_weights(self, model_fp):
-        '''
-        Loads the model weights to a new model object using create_model_fn.
-        
-        Arguments:
-            model_fp: str,      file path where model weights are stored.
-
-        Returns:
-            model: tf.keras.Model, a keras model with weights initialized
-        '''
-        keras_model = self()
-        keras_model.load_weights(model_fp)
-        return keras_model
-
-
-class ClassifierModel(Model):
+class DenseSupervisedModel(Model):
     def __init__(self, ph):
         Model.__init__(self, ph)
 
@@ -110,9 +57,22 @@ class ClassifierModel(Model):
             optimizer=self.optimizer(learning_rate=self.learning_rate),
             metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
         return model
-    
 
-class AutoencoderModel(Model):
+    def preprocess(self,
+                    dataset, 
+                    num_epochs, 
+                    shuffle_buffer, 
+                    batch_size):
+
+        def element_fn(element):
+            return (tf.reshape(element['pixels'], [-1]),
+                    tf.reshape(element['label'], [1]))
+
+        return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
+            num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
+
+
+class DenseAutoencoderModel(Model):
     def __init__(self, ph):
         Model.__init__(self, ph)
 
@@ -135,4 +95,15 @@ class AutoencoderModel(Model):
                         metrics=[tf.keras.metrics.MeanSquaredError()])
         return model
     
-  
+    def preprocess(self,
+                    dataset,
+                    num_epochs, 
+                    shuffle_buffer, 
+                    batch_size):
+
+        def element_fn(element):
+            return (tf.reshape(element['pixels'], [-1]),
+                tf.reshape(element['pixels'], [-1]))
+
+        return dataset.filter(lambda x: not x['is_masked_unsupervised'] if 'is_masked_unsupervised' in x else True).repeat(
+            num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)

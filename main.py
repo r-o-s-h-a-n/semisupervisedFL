@@ -26,6 +26,11 @@ ph = imp.load_source("",exp_config_file).ph
 ph['log_dir'] = log_directory # set log directory
 ph._init_hparams()
 
+if ph['sample_client_data']:
+        print('\n\n WARNING: training on a sample of 100 clients with max 100 examples each.\
+                If this is not intended behavior, please set `sample_client_data` to \
+                False in the config file\n')
+
 # iterate through cartesian product of hyperparameters and run experiment
 hparam_sets = list(ph.gen_hparam_cartesian_product())
 for i in range(ph['curr_run_number'], len(hparam_sets)):

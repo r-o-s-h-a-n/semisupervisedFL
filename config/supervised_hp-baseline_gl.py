@@ -6,8 +6,8 @@ from parameter_handler import ParameterHandler
 ######### GENERAL CONFIG ###############
 config = {}
 
-config['experiment'] = 'SupervisedLearningFL'
-config['model_fn'] = 'DenseSupervisedModel'
+config['experiment'] = 'ConvDropoutSupervisedLearningFL'
+config['model_fn'] = 'ConvDropoutSupervisedModel'
 config['sample_client_data'] = False      # must set to False when running real experiments
 config['run_number'] = 0                  # always initialize as 0, unless starting from a certain run
 
@@ -15,13 +15,13 @@ config['run_number'] = 0                  # always initialize as 0, unless start
 config['shuffle_buffer'] = 100
 
 # training
-config['num_rounds'] = 4
+config['num_rounds'] = 30
 config['log_every'] = 2
-config['model_fp'] = 'classifier_{}.h5'
+config['model_fp'] = 'conv-dropout_{}.h5'
 
 ######### EXPERIMENTAL PARAMETERS ###############
 HP_SUPERVISED_MASK_RATIO = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0]))
-HP_UNSUPERVISED_MASK_RATIO = hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0]))
+HP_UNSUPERVISED_MASK_RATIO = hp.HParam('unsupervised_mask_ratio', hp.Discrete([1.0]))
 # HP_PRETRAINED_MODEL = hp.HParam('pretrained_model', hp.Discrete([None]))
 HP_MASK_BY = hp.HParam('mask_by', hp.Discrete(['example']))
 HP_DATASET = hp.HParam('dataset', hp.Discrete(['emnist']))
@@ -29,7 +29,7 @@ HP_DATASET = hp.HParam('dataset', hp.Discrete(['emnist']))
 ######### NN HYPERPARAMETERS ####################
 HP_LEARNING_RATE = hp.HParam('learning_rate', hp.Discrete([0.02]))
 HP_OPTIMIZER = hp.HParam('optimizer', hp.Discrete(['SGD']))
-HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([32, 64]))
+HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([128]))
 
 ######### FL HYPERPARAMETERS ####################
 HP_NUM_CLIENTS_PER_ROUND = hp.HParam('num_clients_per_round', hp.Discrete([32]))

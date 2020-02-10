@@ -10,7 +10,7 @@ import tensorflow_federated as tff
 from tensorflow_federated.python.common_libs import py_typecheck
 
 
-def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False):
+def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False, only_digits=True):
   '''
   dataset_name -- str,          name of dataset
   mask_by -- str,             indicates if we will mask by clients or examples
@@ -23,7 +23,7 @@ def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False
   assert mask_by in ('client', 'example'), 'mask_by must be `client` or `example`'
 
   if dataset_name == 'emnist':
-    train_set, test_set = tff.simulation.datasets.emnist.load_data()
+    train_set, test_set = tff.simulation.datasets.emnist.load_data(only_digits=only_digits)
 
   if sample_client_data:
     train_set = get_sample_client_data(train_set, 100, 100)

@@ -30,9 +30,9 @@ def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False
     test_set = get_sample_client_data(test_set, 100, 100)
 
   for s in mask_ratios:
-    if mask_by == 'examples':
+    if mask_by == 'example':
       train_set = mask_examples(train_set, mask_ratios[s], s)
-    else:
+    elif mask_by == 'client':
       train_set = mask_clients(train_set, mask_ratios[s], s)
 
   test_set = test_set.create_tf_dataset_from_all_clients()
@@ -74,7 +74,8 @@ def mask_false(example, mask_type):
     example[key] = tf.convert_to_tensor(False)
     return example
 
-def mask_examples(client_data, mask_ratio, seed=None):
+
+def mask_examples(client_data, mask_ratio, mask_type, seed=None):
     '''
     Masks mask_ratio fraction of randomly selected examples on each client.
 
@@ -89,16 +90,16 @@ def mask_examples(client_data, mask_ratio, seed=None):
       # counts number of examples per client and returns a tuple for each client id
       # with the number of masked examples it should contain
       for client_id in client_data.client_ids:
-        for i, example in enumerate(client_data.create_tf_dataset_for_client(client_id)):
+        for i, _ in enumerate(client_data.create_tf_dataset_for_client(client_id)):
           pass
-        yield (client_id, int(mask_ratio*i))
+        yield (client_id, int(mask_ratio*(i+1)))
     
     client_id_to_mask_idx = {x[0]:x[1] for x in get_example_ids_generator()}
 
     def preprocess_fn(dataset, client_id):
-        return dataset.shuffle(buffer_size=SHUFFLE_BUFFER, seed=seed).enumerate().map(lambda i, x: mask_true(x)
+        return dataset.shuffle(buffer_size=500, seed=seed).enumerate().map(lambda i, x: mask_true(x, mask_type)
                                                                                   if i < client_id_to_mask_idx[client_id]
-                                                                                  else mask_false(x))
+                                                                                  else mask_false(x, mask_type))
         
     tff.python.common_libs.py_typecheck.check_callable(preprocess_fn)
 
@@ -138,32 +139,6 @@ def mask_clients(client_data, mask_ratio, mask_type, seed=None):
       return preprocess_fn(client_data.create_tf_dataset_for_client(client_id), client_id)
 
     return tff.simulation.client_data.ConcreteClientData(client_data.client_ids, get_dataset)
-
-
-def preprocess_classifier(dataset, 
-                        num_epochs, 
-                        shuffle_buffer, 
-                        batch_size):
-
-  def element_fn(element):
-    return (tf.reshape(element['pixels'], [-1]),
-            tf.reshape(element['label'], [1]))
-
-  return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
-      num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
-
-
-def preprocess_autoencoder(dataset,
-                        num_epochs, 
-                        shuffle_buffer, 
-                        batch_size):
-
-  def element_fn(element):
-    return (tf.reshape(element['pixels'], [-1]),
-          tf.reshape(element['pixels'], [-1]))
-
-  return dataset.filter(lambda x: not x['is_masked_unsupervised'] if 'is_masked_unsupervised' in x else True).repeat(
-      num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
 
 
 class DataLoader(object):

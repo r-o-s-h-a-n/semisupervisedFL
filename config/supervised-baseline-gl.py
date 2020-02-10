@@ -13,7 +13,7 @@ config['dataset'] = dataset
 
 # data loading
 config['preprocess_fn'] = 'preprocess_classifier'
-config['shuffle_buffer'] = 100
+config['shuffle_buffer'] = 500
 config['batch_size'] = 128
 config['num_epochs'] = 1
 
@@ -21,7 +21,7 @@ config['num_epochs'] = 1
 config['model_fn'] = 'ClassifierModel'
 config['num_rounds'] = 40
 config['num_clients_per_round'] = 64
-config['learning_rate'] = 1.0
+config['learning_rate'] = 0.02
 
 config['saved_model_fp'] = None
 config['model_fp'] = 'classifier.h5'

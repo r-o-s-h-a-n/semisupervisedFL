@@ -9,7 +9,7 @@ config = {}
 config['experiment'] = 'SupervisedLearningFL'
 config['model_fn'] = 'DenseSupervisedModel'
 config['sample_client_data'] = False      # must set to False when running real experiments
-config['run_number'] = 0                  # always initialize as 0, unless starting from a certain run
+config['curr_run_number'] = 0                  # always initialize as 0, unless starting from a certain run
 
 # data loading
 config['shuffle_buffer'] = 100

@@ -7,7 +7,7 @@ from parameter_handler import ParameterHandler
 config = {}
 
 config['experiment'] = 'SupervisedLearningFL'
-config['model_fn'] = 'DenseSupervisedModel'
+config['model_fn'] = 'ConvDropoutSupervisedModel'
 config['sample_client_data'] = False      # must set to False when running real experiments
 config['curr_run_number'] = 0                  # always initialize as 0, unless starting from a certain run
 
@@ -17,7 +17,7 @@ config['shuffle_buffer'] = 500
 # training
 config['num_rounds'] = 30
 config['log_every'] = 2
-config['model_fp'] = 'dense-classifier_{}.h5'
+config['model_fp'] = 'conv-dropout_{}.h5'
 
 ######### EXPERIMENTAL PARAMETERS ###############
 HP_SUPERVISED_MASK_RATIO = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0]))

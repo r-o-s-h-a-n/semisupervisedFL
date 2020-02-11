@@ -43,7 +43,7 @@ class ConvDropoutSupervisedModel(Model):
           tf.keras.layers.Dense(128, activation='relu'),
           tf.keras.layers.Dropout(0.5),
           tf.keras.layers.Dense(
-              10 if only_digits else 62, activation=tf.nn.softmax),
+              10, activation=tf.nn.softmax),
         ])
       
         model.compile(

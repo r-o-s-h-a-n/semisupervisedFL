@@ -12,7 +12,7 @@ config['sample_client_data'] = False      # must set to False when running real 
 config['curr_run_number'] = 0                  # always initialize as 0, unless starting from a certain run
 
 # data loading
-config['shuffle_buffer'] = 100
+config['shuffle_buffer'] = 500
 
 # training
 config['num_rounds'] = 30
@@ -32,8 +32,8 @@ HP_OPTIMIZER = hp.HParam('optimizer', hp.Discrete(['SGD']))
 HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([128]))
 
 ######### FL HYPERPARAMETERS ####################
-HP_NUM_CLIENTS_PER_ROUND = hp.HParam('num_clients_per_round', hp.Discrete([32]))
-HP_NUM_EPOCHS = hp.HParam('num_epochs', hp.Discrete([2]))
+HP_NUM_CLIENTS_PER_ROUND = hp.HParam('num_clients_per_round', hp.Discrete([100]))
+HP_NUM_EPOCHS = hp.HParam('num_epochs', hp.Discrete([5]))
 
 hparam_map = {'supervised_mask_ratio': HP_SUPERVISED_MASK_RATIO,
                 'unsupervised_mask_ratio': HP_UNSUPERVISED_MASK_RATIO,

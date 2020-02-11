@@ -33,7 +33,7 @@ if ph['sample_client_data']:
 
 # iterate through cartesian product of hyperparameters and run experiment
 hparam_sets = list(ph.gen_hparam_cartesian_product())
-for i in range(ph['run_number'], len(hparam_sets)):
+for i in range(ph['curr_run_number'], len(hparam_sets)):
     ph.set_hparams(hparam_sets[i], i)
     experiment = getattr(exp, ph['experiment'])(ph)
     experiment.run()

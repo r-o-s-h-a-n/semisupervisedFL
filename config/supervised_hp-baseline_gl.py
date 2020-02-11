@@ -6,7 +6,7 @@ from parameter_handler import ParameterHandler
 ######### GENERAL CONFIG ###############
 config = {}
 
-config['experiment'] = 'ConvDropoutSupervisedLearningFL'
+config['experiment'] = 'SupervisedLearningFL'
 config['model_fn'] = 'ConvDropoutSupervisedModel'
 config['sample_client_data'] = False      # must set to False when running real experiments
 config['run_number'] = 0                  # always initialize as 0, unless starting from a certain run

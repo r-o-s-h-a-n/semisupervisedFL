@@ -18,17 +18,13 @@ class ConvDropoutSupervisedModel(Model):
         Returns a compiled keras model.
         '''
         data_format = 'channels_last'
-        input_shape = (784,)
+        input_shape = [28, 28, 1]
     
         # if self.saved_model_fp:
         #     encoder_model.load_weights(self.saved_model_fp, by_name=True)
-            
-        # model = tf.keras.models.Sequential([
-        #     encoder_model,
-        #     create_classifier_keras_model()
-        # ])
 
         model = tf.keras.models.Sequential([
+          tf.keras.layers.Reshape(input_shape=(28 * 28,), target_shape=input_shape),
           tf.keras.layers.Conv2D(
               32,
               kernel_size=(3, 3),

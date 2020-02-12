@@ -9,7 +9,7 @@ config = {}
 config['experiment'] = 'SupervisedLearningFL'
 config['model_fn'] = 'ConvDropoutSupervisedModel'
 config['sample_client_data'] = False      # must set to False when running real experiments
-config['curr_run_number'] = 49                  # always initialize as 0, unless starting from a certain run
+config['curr_run_number'] = 50                  # always initialize as 0, unless starting from a certain run
 
 # data loading
 config['shuffle_buffer'] = 500

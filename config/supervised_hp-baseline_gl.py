@@ -15,7 +15,7 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 500
 
 # training
-config['num_rounds'] = 100
+config['num_rounds'] = 50
 config['log_every'] = 2
 config['model_fp'] = 'conv-dropout_{}.h5'
 
@@ -27,13 +27,13 @@ HP_MASK_BY = hp.HParam('mask_by', hp.Discrete(['example']))
 HP_DATASET = hp.HParam('dataset', hp.Discrete(['emnist']))
 
 ######### NN HYPERPARAMETERS ####################
-HP_LEARNING_RATE = hp.HParam('learning_rate', hp.Discrete([0.02]))
+HP_LEARNING_RATE = hp.HParam('learning_rate', hp.Discrete([0.10]))
 HP_OPTIMIZER = hp.HParam('optimizer', hp.Discrete(['SGD']))
 HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([128]))
 
 ######### FL HYPERPARAMETERS ####################
-HP_NUM_CLIENTS_PER_ROUND = hp.HParam('num_clients_per_round', hp.Discrete([100]))
-HP_NUM_EPOCHS = hp.HParam('num_epochs', hp.Discrete([1]))
+HP_NUM_CLIENTS_PER_ROUND = hp.HParam('num_clients_per_round', hp.Discrete([50]))
+HP_NUM_EPOCHS = hp.HParam('num_epochs', hp.Discrete([5]))
 
 hparam_map = {'supervised_mask_ratio': HP_SUPERVISED_MASK_RATIO,
                 'unsupervised_mask_ratio': HP_UNSUPERVISED_MASK_RATIO,

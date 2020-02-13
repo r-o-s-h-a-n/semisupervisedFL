@@ -36,10 +36,10 @@ def create_classifier_keras_model():
 
 class DenseSupervisedModel(Model):
     def __init__(self, ph):
+        Model.__init__(self, ph)
         self.pretrained_model_fp = None
         if 'pretrained_model_fp' in self.ph:
             self.pretrained_model_fp = self.ph['pretrained_model_fp']
-        Model.__init__(self, ph)
 
     def __call__(self):
         '''
@@ -48,7 +48,7 @@ class DenseSupervisedModel(Model):
         encoder_model = create_encoder_keras_model()
     
         if self.pretrained_model_fp:
-            encoder_model.load_weights(self.pretrained_model_fp)
+            encoder_model.load_weights(self.pretrained_model_fp, by_name=True)
             
         model = tf.keras.models.Sequential([
             encoder_model,
@@ -85,9 +85,6 @@ class DenseAutoencoderModel(Model):
         '''
         encoder_model = create_encoder_keras_model()
     
-        # if self.saved_model_fp:
-        #     encoder_model.load_weights(self.saved_model_fp)
-            
         model = tf.keras.models.Sequential([
             encoder_model,
             create_decoder_keras_model()

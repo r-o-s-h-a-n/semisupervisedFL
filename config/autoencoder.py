@@ -15,9 +15,9 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 100
 
 # training
-config['num_rounds'] = 4
-config['log_every'] = 2
-config['model_fp'] = 'classifier_{}.h5'
+config['num_rounds'] = 1
+config['log_every'] = 1
+config['model_fp'] = 'autoencoder.h5'
 
 
 ######### EXPERIMENTAL PARAMETERS ###############

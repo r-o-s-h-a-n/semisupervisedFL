@@ -142,10 +142,10 @@ def rotate_img_tensor(img, rot):
 
 class RotationSupervisedModel(Model):
     def __init__(self, ph):
+        Model.__init__(self, ph)
         self.pretrained_model_fp = None
         if 'pretrained_model_fp' in self.ph:
             self.pretrained_model_fp = self.ph['pretrained_model_fp']
-        Model.__init__(self, ph)
 
     def __call__(self):
         '''
@@ -154,7 +154,7 @@ class RotationSupervisedModel(Model):
         feature_extractor = create_feature_extractor_block()
 
         if self.pretrained_model_fp:
-            feature_extractor.load_weights(self.pretrained_model_fp)
+            feature_extractor.load_weights(self.pretrained_model_fp, by_name=True)
 
         model = tf.keras.models.Sequential([
                 feature_extractor,

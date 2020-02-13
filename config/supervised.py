@@ -15,10 +15,10 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 100
 
 # training
-config['num_rounds'] = 4
-config['log_every'] = 2
-config['model_fp'] = 'classifier_{}.h5'
-config['pretrained_model_fp'] = 'logs/autoencoder_2020-02-13T06:34:41.557836/run_0/classifier_{}.h5' # FILE PATH SHOULD LOOK SOMETHING LIKE THIS ONCE YOU'VE TRAINED IT
+config['num_rounds'] = 1
+config['log_every'] = 1
+config['model_fp'] = 'classifier.h5'
+config['pretrained_model_fp'] = 'logs/autoencoder_2020-02-13T07:42:28.121198/run_0/autoencoder.h5' # FILE PATH SHOULD LOOK SOMETHING LIKE THIS ONCE YOU'VE TRAINED IT
 
 ######### EXPERIMENTAL PARAMETERS ###############
 HP_SUPERVISED_MASK_RATIO = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0]))
@@ -29,7 +29,7 @@ HP_DATASET = hp.HParam('dataset', hp.Discrete(['emnist']))
 ######### NN HYPERPARAMETERS ####################
 HP_LEARNING_RATE = hp.HParam('learning_rate', hp.Discrete([0.02]))
 HP_OPTIMIZER = hp.HParam('optimizer', hp.Discrete(['SGD']))
-HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([32, 64]))
+HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([64]))
 
 ######### FL HYPERPARAMETERS ####################
 HP_NUM_CLIENTS_PER_ROUND = hp.HParam('num_clients_per_round', hp.Discrete([32]))

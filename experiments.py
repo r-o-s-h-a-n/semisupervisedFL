@@ -141,7 +141,7 @@ class SupervisedLearningCentral(Algorithm):
         Algorithm.__init__(self, ph)
         self.dataloader = dta.DataLoader(
                                 self.preprocess_fn,
-                                1,
+                                self.ph['num_epochs'],
                                 self.ph['shuffle_buffer'],
                                 self.ph['batch_size']
                                 )

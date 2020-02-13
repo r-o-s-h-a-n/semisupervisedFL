@@ -1,2 +1,2 @@
 pip install --upgrade tensorflow
-pip install --quiet --upgrade tensorflow_federated
+pip install tensorflow-federated==0.11.0

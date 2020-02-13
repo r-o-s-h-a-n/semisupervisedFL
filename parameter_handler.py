@@ -78,6 +78,13 @@ class ParameterHandler(object):
         else:
             raise KeyError('No saved parameter named `{}`'.format(key))
 
+    def __contains__(self, key):
+        if key in self.hparam_map:
+            return True
+        elif key in self.config:
+            return True
+        return False
+
     def get_hparams(self):
         if not self.hparams:
             raise AttributeError('need to generate a set of hyperpamarameters for this experiment first')

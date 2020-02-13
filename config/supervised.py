@@ -18,11 +18,11 @@ config['shuffle_buffer'] = 100
 config['num_rounds'] = 4
 config['log_every'] = 2
 config['model_fp'] = 'classifier_{}.h5'
+config['pretrained_model_fp'] = 'logs/autoencoder_2020-02-13T06:34:41.557836/run_0/classifier_{}.h5' # FILE PATH SHOULD LOOK SOMETHING LIKE THIS ONCE YOU'VE TRAINED IT
 
 ######### EXPERIMENTAL PARAMETERS ###############
 HP_SUPERVISED_MASK_RATIO = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0]))
 HP_UNSUPERVISED_MASK_RATIO = hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0]))
-# HP_PRETRAINED_MODEL = hp.HParam('pretrained_model', hp.Discrete([None]))
 HP_MASK_BY = hp.HParam('mask_by', hp.Discrete(['example']))
 HP_DATASET = hp.HParam('dataset', hp.Discrete(['emnist']))
 
@@ -37,7 +37,6 @@ HP_NUM_EPOCHS = hp.HParam('num_epochs', hp.Discrete([2]))
 
 hparam_map = {'supervised_mask_ratio': HP_SUPERVISED_MASK_RATIO,
                 'unsupervised_mask_ratio': HP_UNSUPERVISED_MASK_RATIO,
-                # 'pretrained_model': HP_PRETRAINED_MODEL,
                 'mask_by': HP_MASK_BY,
                 'dataset': HP_DATASET,
 

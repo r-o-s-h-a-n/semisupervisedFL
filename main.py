@@ -1,5 +1,8 @@
+# import objgraph
+# from guppy3 import hpy
 import argparse
 import os
+# import gc
 import imp
 import datetime
 import numpy as np
@@ -9,18 +12,15 @@ from pprint import pprint
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--exp', type=str, required=True, default='', help='config file with parameters of the experiment')
+parser.add_argument('--run', type=int, required=False, default=0, help='run number for current experiment')
 args_opt = parser.parse_args()
 
+curr_run_number = int(args_opt.run)
 # sets unique directory name for writing all logs for experiment and saved models
-log_directory = os.path.join('.',
-                            'logs',
-                            '_'.join([args_opt.exp,
-                                    datetime.datetime.now().isoformat()
-                            ]))
+log_directory = os.path.join('.', 'logs', args_opt.exp)
 
 # loads experiment
 exp_config_file = os.path.join('.','config',args_opt.exp+'.py')
-
 # loads parameter handler
 ph = imp.load_source("",exp_config_file).ph
 ph['log_dir'] = log_directory # set log directory
@@ -31,9 +31,6 @@ if ph['sample_client_data']:
                 If this is not intended behavior, please set `sample_client_data` to \
                 False in the config file\n')
 
-# iterate through cartesian product of hyperparameters and run experiment
-hparam_sets = list(ph.gen_hparam_cartesian_product())
-for i in range(ph['curr_run_number'], len(hparam_sets)):
-    ph.set_hparams(hparam_sets[i], i)
-    experiment = getattr(exp, ph['experiment'])(ph)
-    experiment.run()
+ph.set_hparams(ph.hparam_sets[curr_run_number], curr_run_number)
+experiment = getattr(exp, ph['experiment'])(ph)
+experiment.run()

@@ -24,12 +24,12 @@ config['model_fp'] = 'autoencoder.h5'
 HP_SUPERVISED_MASK_RATIO = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0]))
 HP_UNSUPERVISED_MASK_RATIO = hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0]))
 HP_MASK_BY = hp.HParam('mask_by', hp.Discrete(['example']))
-HP_DATASET = hp.HParam('dataset', hp.Discrete(['emnist']))
+HP_DATASET = hp.HParam('dataset', hp.Discrete(['emnist', 'emnist','emnist','emnist']))
 
 ######### NN HYPERPARAMETERS ####################
 HP_LEARNING_RATE = hp.HParam('learning_rate', hp.Discrete([0.02]))
 HP_OPTIMIZER = hp.HParam('optimizer', hp.Discrete(['SGD']))
-HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([64]))
+HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([128]))
 
 ######### FL HYPERPARAMETERS ####################
 HP_NUM_CLIENTS_PER_ROUND = hp.HParam('num_clients_per_round', hp.Discrete([32]))
@@ -67,3 +67,5 @@ metric_map = {'train_loss': METRIC_TRAIN_LOSS,
 
 #################################################
 ph = ParameterHandler(config, hparam_map, metric_map)
+ph.hparam_sets = list(ph.gen_hparam_cartesian_product())
+print(len(ph.hparam_sets))

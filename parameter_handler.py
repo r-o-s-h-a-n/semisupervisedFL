@@ -72,7 +72,13 @@ class ParameterHandler(object):
         '''
         # search hp first
         if key in self.hparam_map:
-            return self.hparams[self.hparam_map[key]]
+            try:
+                return self.hparams[self.hparam_map[key]]
+            except KeyError:
+                print('key', key)
+                print('hparam map', self.hparam_map)
+                print('hparams', self.hparams)
+                1/0
         elif key in self.config:
             return self.config[key]
         else:

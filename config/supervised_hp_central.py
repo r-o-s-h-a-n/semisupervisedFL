@@ -57,3 +57,5 @@ metric_map = {'train_loss': METRIC_TRAIN_LOSS,
 
 #################################################
 ph = ParameterHandler(config, hparam_map, metric_map)
+ph.hparam_sets = list(ph.gen_hparam_cartesian_product())
+print(len(ph.hparam_sets))

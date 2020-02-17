@@ -13,6 +13,13 @@ NCHANNELS1 = 64
 NCHANNELS2 = 64
 NCHANNELS3 = 64
 
+# NCHANNELS1 = 192
+# NCHANNELS2 = 160
+# NCHANNELS3 = 96
+
+
+INPUT_SHAPES = {'cifar100': (32,32,3), 'emnist': (28,28,1)}
+
 
 def create_NIN_block(out_planes, kernel_size, name=None):
     model = tf.keras.models.Sequential([
@@ -167,7 +174,7 @@ class RotationSupervisedModel(Model):
             )
         return model
 
-    def preprocess(self,
+    def preprocess_emnist(self,
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 
@@ -180,6 +187,21 @@ class RotationSupervisedModel(Model):
         return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
             num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
 
+    def preprocess_cifar100(self,
+                    dataset, 
+                    num_epochs, 
+                    shuffle_buffer, 
+                    batch_size):
+
+        def element_fn(element):
+            img = tf.math.divide(tf.cast(element['image'], tf.float32),
+                                tf.constant(255.0, dtype=tf.float32))
+
+            return (img,
+                    tf.reshape(element['label'], [1]))
+
+        return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
+            num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
 
 class RotationSelfSupervisedModel(Model):
     '''
@@ -204,7 +226,7 @@ class RotationSelfSupervisedModel(Model):
             metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
         return model    
 
-    def preprocess(self,
+    def preprocess_emnist(self,
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 
@@ -212,6 +234,25 @@ class RotationSelfSupervisedModel(Model):
 
         def element_fn(element):
             img = tf.expand_dims(element['pixels'], 2)
+
+            rotated_elements = (
+                tf.data.Dataset.from_tensor_slices([rotate_img_tensor(img, rot) for rot in [0, 90, 180, 270]]),
+                tf.data.Dataset.from_tensor_slices([0,1,2,3])
+            )
+            return tf.data.Dataset.zip(rotated_elements)
+
+        return dataset.filter(lambda x: not x['is_masked_unsupervised'] if 'is_masked_unsupervised' in x else True).shuffle(
+            shuffle_buffer).flat_map(element_fn).repeat(num_epochs).batch(batch_size)
+
+    def preprocess_cifar100(self,
+                    dataset, 
+                    num_epochs, 
+                    shuffle_buffer, 
+                    batch_size):
+
+        def element_fn(element):
+            img = tf.math.divide(tf.cast(element['image'], tf.float32),
+                                tf.constant(255.0, dtype=tf.float32))
 
             rotated_elements = (
                 tf.data.Dataset.from_tensor_slices([rotate_img_tensor(img, rot) for rot in [0, 90, 180, 270]]),

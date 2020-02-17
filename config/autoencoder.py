@@ -24,7 +24,7 @@ config['model_fp'] = 'autoencoder.h5'
 HP_SUPERVISED_MASK_RATIO = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0]))
 HP_UNSUPERVISED_MASK_RATIO = hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0]))
 HP_MASK_BY = hp.HParam('mask_by', hp.Discrete(['example']))
-HP_DATASET = hp.HParam('dataset', hp.Discrete(['emnist', 'emnist','emnist','emnist']))
+HP_DATASET = hp.HParam('dataset', hp.Discrete(['cifar100']))
 
 ######### NN HYPERPARAMETERS ####################
 HP_LEARNING_RATE = hp.HParam('learning_rate', hp.Discrete([0.02]))

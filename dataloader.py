@@ -6,6 +6,7 @@ from six.moves import range
 import six
 import tensorflow as tf
 import tensorflow_federated as tff
+import cifar100
 
 from tensorflow_federated.python.common_libs import py_typecheck
 
@@ -19,11 +20,26 @@ def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False
   sample_dataset -- bool,     if true, will return a small ClientData dataset
                               containing 100 clients with max 100 examples each
   '''
-  assert dataset_name in ('emnist')
+  assert dataset_name in ('emnist', 'cifar100', 'cifar10central')
   assert mask_by in ('client', 'example'), 'mask_by must be `client` or `example`'
 
-  if dataset_name == 'emnist':
+  if dataset_name == 'emnist_federated':
     train_set, test_set = tff.simulation.datasets.emnist.load_data()
+
+  elif dataset_name == 'cifar100':
+    train_set, test_set = cifar100.load_data()
+
+  elif dataset_name == 'cifar10central':
+    train_dataset, test_set = tf.keras.datasets.cifar10.load_data()
+    
+    x, y = train_dataset
+    train_dataset = tf.data.Dataset.from_tensor_slices((x,y))
+    train_dataset = train_dataset.map(lambda x, y: {'image': x, 'label': y})
+    train_set = tff.simulation.client_data.ConcreteClientData(['0'], lambda x: train_dataset)
+
+    x, y = test_set
+    test_set = tf.data.Dataset.from_tensor_slices((x,y))
+    test_set = test_set.map(lambda x, y: {'image': x, 'label': y})
 
   if sample_client_data:
     train_set = get_sample_client_data(train_set, 100, 100)
@@ -35,7 +51,8 @@ def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False
     elif mask_by == 'client':
       train_set = mask_clients(train_set, mask_ratios[s], s)
 
-  test_set = test_set.create_tf_dataset_from_all_clients()
+  if isinstance(test_set, tff.simulation.ClientData):
+    test_set = test_set.create_tf_dataset_from_all_clients()
 
   return train_set, test_set
 

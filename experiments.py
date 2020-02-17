@@ -24,8 +24,7 @@ class Algorithm(object):
         self.model_fp = self.ph['model_fp']
         
         self.keras_model_fn = getattr(mdl, self.ph['model_fn'])(self.ph)
-        self.preprocess_fn = self.keras_model_fn.preprocess
-
+        self.preprocess_fn = getattr(self.keras_model_fn, 'preprocess_{}'.format(self.ph['dataset']))
 
 class SupervisedLearningFL(Algorithm):
     '''
@@ -110,8 +109,10 @@ class SupervisedLearningFL(Algorithm):
             accuracy of model in state on dataset provided
         '''
         keras_model = self.keras_model_fn()
+        shape = tf.data.DatasetSpec.from_value(dataset)._element_spec[0].shape
+        keras_model.build(shape)
+        
         tff.learning.assign_weights_to_keras_model(keras_model, state.model)
-
         metrics = keras_model.evaluate(dataset)
         return (metrics[0].item(), metrics[1].item())
 
@@ -162,6 +163,7 @@ class SupervisedLearningCentral(Algorithm):
                                                         },
                                                         sample_client_data = self.ph['sample_client_data']
             )
+
             train_dataset = train_client_data.create_tf_dataset_from_all_clients()
             train_dataset = self.dataloader.preprocess_dataset(train_dataset)
             test_dataset = self.dataloader.preprocess_dataset(test_dataset)

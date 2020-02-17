@@ -64,7 +64,9 @@ class DenseSupervisedModel(Model):
       
         model.compile(
             loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-            optimizer=self.optimizer(learning_rate=self.learning_rate),
+            optimizer=self.optimizer(learning_rate=self.learning_rate,
+                                        momentum=self.momentum, 
+                                        decay=self.decay),
             metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
         return model
 
@@ -131,7 +133,9 @@ class DenseAutoencoderModel(Model):
         ])
       
         model.compile(loss=tf.keras.losses.BinaryCrossentropy(),
-                        optimizer=self.optimizer(learning_rate=self.learning_rate),
+                        optimizer=self.optimizer(learning_rate=self.learning_rate,
+                                                momentum=self.momentum, 
+                                                decay=self.decay),
                         metrics=[tf.keras.metrics.MeanSquaredError()])
         return model
     

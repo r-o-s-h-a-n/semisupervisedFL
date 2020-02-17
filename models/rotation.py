@@ -9,16 +9,12 @@ import tensorflow_federated as tff
 from models.model import Model
 
 
-NCHANNELS1 = 64
-NCHANNELS2 = 64
-NCHANNELS3 = 64
+NCHANNELS1 = 192
+NCHANNELS2 = 160
+NCHANNELS3 = 96
 
-# NCHANNELS1 = 192
-# NCHANNELS2 = 160
-# NCHANNELS3 = 96
-
-
-INPUT_SHAPES = {'cifar100': (32,32,3), 'emnist': (28,28,1)}
+INPUT_SHAPES = {'emnist': (28,28,1), 'cifar100': (32,32,3), 'cifar10central': (32,32,3)}
+OUTPUT_SHAPES = {'emnist': 10, 'cifar100': 100, 'cifar10central': 10}
 
 
 def create_NIN_block(out_planes, kernel_size, name=None):
@@ -150,6 +146,7 @@ def rotate_img_tensor(img, rot):
 class RotationSupervisedModel(Model):
     def __init__(self, ph):
         Model.__init__(self, ph)
+        self.output_shape = OUTPUT_SHAPES[self.ph['dataset']]
         self.pretrained_model_fp = None
         if 'pretrained_model_fp' in self.ph:
             self.pretrained_model_fp = self.ph['pretrained_model_fp']
@@ -165,11 +162,14 @@ class RotationSupervisedModel(Model):
 
         model = tf.keras.models.Sequential([
                 feature_extractor,
-                create_conv_label_classifier_block()
+                create_conv_label_classifier_block(self.output_shape)
             ])
         model.compile(
             loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-            optimizer=self.optimizer(learning_rate=self.learning_rate),
+            optimizer=self.optimizer(learning_rate=self.learning_rate, 
+                                        nesterov=self.nesterov,
+                                        momentum=self.momentum, 
+                                        decay=self.decay),
             metrics=[tf.keras.metrics.SparseCategoricalAccuracy()]
             )
         return model
@@ -188,6 +188,22 @@ class RotationSupervisedModel(Model):
             num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
 
     def preprocess_cifar100(self,
+                    dataset, 
+                    num_epochs, 
+                    shuffle_buffer, 
+                    batch_size):
+
+        def element_fn(element):
+            img = tf.math.divide(tf.cast(element['image'], tf.float32),
+                                tf.constant(255.0, dtype=tf.float32))
+
+            return (img,
+                    tf.reshape(element['label'], [1]))
+
+        return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
+            num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
+
+    def preprocess_cifar10central(self,
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 
@@ -222,7 +238,10 @@ class RotationSelfSupervisedModel(Model):
 
         model.compile(
             loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-            optimizer=self.optimizer(learning_rate=self.learning_rate),
+            optimizer=self.optimizer(learning_rate=self.learning_rate,
+                                        nesterov=self.nesterov,
+                                        momentum=self.momentum, 
+                                        decay=self.decay),
             metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
         return model    
 
@@ -245,6 +264,25 @@ class RotationSelfSupervisedModel(Model):
             shuffle_buffer).flat_map(element_fn).repeat(num_epochs).batch(batch_size)
 
     def preprocess_cifar100(self,
+                    dataset, 
+                    num_epochs, 
+                    shuffle_buffer, 
+                    batch_size):
+
+        def element_fn(element):
+            img = tf.math.divide(tf.cast(element['image'], tf.float32),
+                                tf.constant(255.0, dtype=tf.float32))
+
+            rotated_elements = (
+                tf.data.Dataset.from_tensor_slices([rotate_img_tensor(img, rot) for rot in [0, 90, 180, 270]]),
+                tf.data.Dataset.from_tensor_slices([0,1,2,3])
+            )
+            return tf.data.Dataset.zip(rotated_elements)
+
+        return dataset.filter(lambda x: not x['is_masked_unsupervised'] if 'is_masked_unsupervised' in x else True).shuffle(
+            shuffle_buffer).flat_map(element_fn).repeat(num_epochs).batch(batch_size)
+
+    def preprocess_cifar10central(self,
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 

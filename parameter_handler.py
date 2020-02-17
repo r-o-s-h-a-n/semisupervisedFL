@@ -91,6 +91,12 @@ class ParameterHandler(object):
             return True
         return False
 
+    def setdefault(self, key, default):
+        if not self.__contains__(key):
+            return default
+        else:
+            return self.__getitem__(key)
+
     def get_hparams(self):
         if not self.hparams:
             raise AttributeError('need to generate a set of hyperpamarameters for this experiment first')

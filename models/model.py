@@ -18,6 +18,10 @@ class Model(object):
         self.ph=ph
         self.optimizer = getattr(tf.keras.optimizers, ph['optimizer'])
         self.learning_rate = ph['learning_rate']
+        self.nesterov = ph.setdefault('nesterov', None)
+        self.momentum = ph.setdefault('momentum', None)
+        self.decay = ph.setdefault('decay', None)
+
         # self.saved_model_fp = opt['saved_model_fp']
 
     def __call__(self):

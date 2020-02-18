@@ -20,6 +20,13 @@ config['log_every'] = 1
 config['model_fp'] = 'classifier.h5'
 config['pretrained_model_fp'] = 'logs/autoencoder_2020-02-13T07:42:28.121198/run_0/autoencoder.h5' # FILE PATH SHOULD LOOK SOMETHING LIKE THIS ONCE YOU'VE TRAINED IT
 
+config['optimizer'] = 'SGD'
+config['learning_rate'] = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries=[35, 70, 85], 
+                                                                                values=[0.1,0.02,0.004,0.0008])
+config['nesterov'] = True
+config['momentum'] = 0.9
+config['decay'] = 5E-4
+
 ######### EXPERIMENTAL PARAMETERS ###############
 HP_SUPERVISED_MASK_RATIO = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0]))
 HP_UNSUPERVISED_MASK_RATIO = hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0]))
@@ -27,8 +34,6 @@ HP_MASK_BY = hp.HParam('mask_by', hp.Discrete(['example']))
 HP_DATASET = hp.HParam('dataset', hp.Discrete(['cifar100']))
 
 ######### NN HYPERPARAMETERS ####################
-HP_LEARNING_RATE = hp.HParam('learning_rate', hp.Discrete([0.02]))
-HP_OPTIMIZER = hp.HParam('optimizer', hp.Discrete(['SGD']))
 HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([64]))
 
 ######### FL HYPERPARAMETERS ####################
@@ -39,9 +44,6 @@ hparam_map = {'supervised_mask_ratio': HP_SUPERVISED_MASK_RATIO,
                 'unsupervised_mask_ratio': HP_UNSUPERVISED_MASK_RATIO,
                 'mask_by': HP_MASK_BY,
                 'dataset': HP_DATASET,
-
-                'learning_rate': HP_LEARNING_RATE,
-                'optimizer': HP_OPTIMIZER,
                 'batch_size': HP_BATCH_SIZE,
 
                 'num_clients_per_round': HP_NUM_CLIENTS_PER_ROUND,

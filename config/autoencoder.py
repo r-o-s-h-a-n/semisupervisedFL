@@ -12,23 +12,27 @@ config['sample_client_data'] = False      # must set to False when running real 
 config['curr_run_number'] = 0                  # always initialize as 0, unless starting from a certain run
 
 # data loading
-config['shuffle_buffer'] = 100
+config['shuffle_buffer'] = 1
 
 # training
 config['num_rounds'] = 1
 config['log_every'] = 1
 config['model_fp'] = 'autoencoder.h5'
 
+config['optimizer'] = 'SGD'
+config['learning_rate'] = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries=[35, 70, 85], 
+                                                                                values=[0.1,0.02,0.004,0.0008])
+config['nesterov'] = True
+config['momentum'] = 0.9
+config['decay'] = 5E-4
 
 ######### EXPERIMENTAL PARAMETERS ###############
 HP_SUPERVISED_MASK_RATIO = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0]))
 HP_UNSUPERVISED_MASK_RATIO = hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0]))
 HP_MASK_BY = hp.HParam('mask_by', hp.Discrete(['example']))
-HP_DATASET = hp.HParam('dataset', hp.Discrete(['cifar100']))
+HP_DATASET = hp.HParam('dataset', hp.Discrete(['emnist']))
 
 ######### NN HYPERPARAMETERS ####################
-HP_LEARNING_RATE = hp.HParam('learning_rate', hp.Discrete([0.02]))
-HP_OPTIMIZER = hp.HParam('optimizer', hp.Discrete(['SGD']))
 HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([128]))
 
 ######### FL HYPERPARAMETERS ####################
@@ -40,15 +44,11 @@ hparam_map = {'supervised_mask_ratio': HP_SUPERVISED_MASK_RATIO,
                 'unsupervised_mask_ratio': HP_UNSUPERVISED_MASK_RATIO,
                 'mask_by': HP_MASK_BY,
                 'dataset': HP_DATASET,
-
-                'learning_rate': HP_LEARNING_RATE,
-                'optimizer': HP_OPTIMIZER,
                 'batch_size': HP_BATCH_SIZE,
 
                 'num_clients_per_round': HP_NUM_CLIENTS_PER_ROUND,
                 'num_epochs': HP_NUM_EPOCHS
 }
-
 
 
 ######### METRICS ###############################

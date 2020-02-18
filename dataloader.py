@@ -23,7 +23,7 @@ def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False
   assert dataset_name in ('emnist', 'cifar100', 'cifar10central')
   assert mask_by in ('client', 'example'), 'mask_by must be `client` or `example`'
 
-  if dataset_name == 'emnist_federated':
+  if dataset_name == 'emnist':
     train_set, test_set = tff.simulation.datasets.emnist.load_data()
 
   elif dataset_name == 'cifar100':

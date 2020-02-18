@@ -41,8 +41,9 @@ class GlobalAveragePooling(tf.keras.layers.Layer):
         return self.flatten(x)
 
 
-def create_feature_extractor_block():
+def create_feature_extractor_block(input_shape):
     model = tf.keras.models.Sequential([
+        tf.keras.layers.InputLayer(input_shape),
         # block 1
         create_NIN_block(NCHANNELS1, 5, 'Block1_Conv1'),
         create_NIN_block(NCHANNELS2, 1, 'Block1_Conv2'),
@@ -147,9 +148,7 @@ class RotationSupervisedModel(Model):
     def __init__(self, ph):
         Model.__init__(self, ph)
         self.output_shape = OUTPUT_SHAPES[self.ph['dataset']]
-        self.pretrained_model_fp = None
-        if 'pretrained_model_fp' in self.ph:
-            self.pretrained_model_fp = self.ph['pretrained_model_fp']
+        self.pretrained_model_fp = self.ph.setdefault('pretrained_model_fp', None)
 
     def __call__(self):
         '''
@@ -221,19 +220,19 @@ class RotationSupervisedModel(Model):
 
 class RotationSelfSupervisedModel(Model):
     '''
-    Batch size must be a multiple of 4 to ensure all rotations of an image remain in the same
-    batch as prescribed by RotationNet paper.
+    Predicts rotation of images
     '''
     def __init__(self, ph):
         Model.__init__(self, ph)
+        self.input_shape = INPUT_SHAPES[ph['dataset']]
 
     def __call__(self):
         '''
         Returns a compiled keras model.
         '''
         model = tf.keras.models.Sequential([
-            create_feature_extractor_block(),
-            create_conv_rotation_classifier_block()
+            create_feature_extractor_block(self.input_shape),
+            create_conv_rotation_classifier_block(self.input_shape)
         ])
 
         model.compile(

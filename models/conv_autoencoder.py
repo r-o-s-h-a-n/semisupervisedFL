@@ -38,6 +38,7 @@ def create_classifier_keras_model(output_shape):
         ])
     return model
 
+
 class ConvSupervisedModel(Model):
     def __init__(self, ph):
         Model.__init__(self, ph)
@@ -84,6 +85,38 @@ class ConvSupervisedModel(Model):
         return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
             num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
 
+    def preprocess_cifar100(self,
+                    dataset,
+                    num_epochs, 
+                    shuffle_buffer, 
+                    batch_size):
+
+        def element_fn(element):
+            img = tf.math.divide(tf.cast(element['image'], tf.float32),
+                                tf.constant(255.0, dtype=tf.float32))
+
+            return (img,
+                tf.reshape(element['label'], [1]))
+
+        return dataset.filter(lambda x: not x['is_masked_unsupervised'] if 'is_masked_unsupervised' in x else True).repeat(
+            num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
+
+    def preprocess_cifar10central(self,
+                    dataset,
+                    num_epochs, 
+                    shuffle_buffer, 
+                    batch_size):
+
+        def element_fn(element):
+            img = tf.math.divide(tf.cast(element['image'], tf.float32),
+                                tf.constant(255.0, dtype=tf.float32))
+
+            return (img,
+                tf.reshape(element['label'], [1]))
+
+        return dataset.filter(lambda x: not x['is_masked_unsupervised'] if 'is_masked_unsupervised' in x else True).repeat(
+            num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
+
 
 class ConvAutoencoderModel(Model):
     def __init__(self, ph):
@@ -121,4 +154,36 @@ class ConvAutoencoderModel(Model):
                     img)
 
         return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
+            num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
+    
+    def preprocess_cifar100(self,
+                    dataset,
+                    num_epochs, 
+                    shuffle_buffer, 
+                    batch_size):
+
+        def element_fn(element):
+            img = tf.math.divide(tf.cast(element['image'], tf.float32),
+                    tf.constant(255.0, dtype=tf.float32))
+
+            return (img,
+                    img)
+
+        return dataset.filter(lambda x: not x['is_masked_unsupervised'] if 'is_masked_unsupervised' in x else True).repeat(
+            num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
+
+    def preprocess_cifar10central(self,
+                    dataset,
+                    num_epochs, 
+                    shuffle_buffer, 
+                    batch_size):
+
+        def element_fn(element):
+            img = tf.math.divide(tf.cast(element['image'], tf.float32),
+                    tf.constant(255.0, dtype=tf.float32))
+
+            return (img,
+                    img)
+
+        return dataset.filter(lambda x: not x['is_masked_unsupervised'] if 'is_masked_unsupervised' in x else True).repeat(
             num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)

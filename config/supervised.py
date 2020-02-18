@@ -31,7 +31,7 @@ config['decay'] = 5E-4
 HP_SUPERVISED_MASK_RATIO = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0]))
 HP_UNSUPERVISED_MASK_RATIO = hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0]))
 HP_MASK_BY = hp.HParam('mask_by', hp.Discrete(['example']))
-HP_DATASET = hp.HParam('dataset', hp.Discrete(['cifar100']))
+HP_DATASET = hp.HParam('dataset', hp.Discrete(['emnist']))
 
 ######### NN HYPERPARAMETERS ####################
 HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([64]))

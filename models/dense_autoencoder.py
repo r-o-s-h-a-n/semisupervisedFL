@@ -43,10 +43,7 @@ class DenseSupervisedModel(Model):
         Model.__init__(self, ph)
         self.input_size = INPUT_SIZE[self.ph['dataset']]
         self.output_size = OUTPUT_SIZE[self.ph['dataset']]
-
-        self.pretrained_model_fp = None
-        if 'pretrained_model_fp' in self.ph:
-            self.pretrained_model_fp = self.ph['pretrained_model_fp']
+        self.pretrained_model_fp = self.ph.setdefault('pretrained_model_fp', None)
 
     def __call__(self):
         '''
@@ -134,6 +131,7 @@ class DenseAutoencoderModel(Model):
       
         model.compile(loss=tf.keras.losses.BinaryCrossentropy(),
                         optimizer=self.optimizer(learning_rate=self.learning_rate,
+                                                nesterov=self.nesterov,
                                                 momentum=self.momentum, 
                                                 decay=self.decay),
                         metrics=[tf.keras.metrics.MeanSquaredError()])

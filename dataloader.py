@@ -7,11 +7,12 @@ import six
 import tensorflow as tf
 import tensorflow_federated as tff
 import cifar100
+import plots
 
 from tensorflow_federated.python.common_libs import py_typecheck
 
 
-def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False):
+def get_client_data(dataset_name, mask_by, mask_ratios=None, sample_client_data=False):
   '''
   dataset_name -- str,          name of dataset
   mask_by -- str,             indicates if we will mask by clients or examples
@@ -45,11 +46,12 @@ def get_client_data(dataset_name, mask_by, mask_ratios, sample_client_data=False
     train_set = get_sample_client_data(train_set, 100, 100)
     test_set = get_sample_client_data(test_set, 100, 100)
 
-  for s in mask_ratios:
-    if mask_by == 'example':
-      train_set = mask_examples(train_set, mask_ratios[s], s)
-    elif mask_by == 'client':
-      train_set = mask_clients(train_set, mask_ratios[s], s)
+  if mask_ratios:
+    for s in mask_ratios:
+      if mask_by == 'example':
+        train_set = mask_examples(train_set, mask_ratios[s], s)
+      elif mask_by == 'client':
+        train_set = mask_clients(train_set, mask_ratios[s], s)
 
   if isinstance(test_set, tff.simulation.ClientData):
     test_set = test_set.create_tf_dataset_from_all_clients()
@@ -163,12 +165,14 @@ class DataLoader(object):
                 preprocess_fn,
                 num_epochs = 10, 
                 shuffle_buffer = 500, 
-                batch_size = 128
+                batch_size = 128,
+                learning_env = 'federated'
                 ):
         self.preprocess_fn = preprocess_fn
         self.num_epochs = num_epochs
         self.shuffle_buffer = shuffle_buffer
         self.batch_size = batch_size
+        self.learning_env = learning_env
       
     def preprocess_dataset(self, dataset):
         '''
@@ -177,7 +181,8 @@ class DataLoader(object):
         return self.preprocess_fn(dataset,
                                   self.num_epochs,
                                   self.shuffle_buffer,
-                                  self.batch_size
+                                  self.batch_size,
+                                  self.learning_env
                                   )
 
     def make_federated_data(self, client_data, client_ids):

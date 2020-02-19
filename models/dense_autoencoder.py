@@ -72,7 +72,12 @@ class DenseSupervisedModel(Model):
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             return (tf.reshape(element['pixels'], [-1]),
@@ -85,7 +90,12 @@ class DenseSupervisedModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),
@@ -101,7 +111,12 @@ class DenseSupervisedModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),
@@ -142,7 +157,12 @@ class DenseAutoencoderModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             return (tf.reshape(element['pixels'], [-1]),
@@ -155,7 +175,12 @@ class DenseAutoencoderModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),
@@ -171,7 +196,12 @@ class DenseAutoencoderModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),

@@ -15,11 +15,12 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 100
 
 # training
-config['num_epochs'] = 10
+config['num_epochs'] = 100
 config['log_every'] = 1
 config['model_fp'] = 'rotation_feature.h5'
 
 config['optimizer'] = 'SGD'
+# config['learning_rate'] = 0.05
 config['learning_rate'] = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries=[35, 70, 85], 
                                                                                 values=[0.1,0.02,0.004,0.0008])
 config['nesterov'] = True
@@ -30,7 +31,7 @@ config['decay'] = 5E-4
 hparam_map = {'supervised_mask_ratio': hp.HParam('supervised_mask_ratio', hp.Discrete([0.0])),
                 'unsupervised_mask_ratio': hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0])),
                 'mask_by': hp.HParam('mask_by', hp.Discrete(['example'])),
-                'dataset': hp.HParam('dataset', hp.Discrete(['emnist'])),
+                'dataset': hp.HParam('dataset', hp.Discrete(['cifar10central'])),
                 'batch_size': hp.HParam('batch_size', hp.Discrete([128]))
 }
 

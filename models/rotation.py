@@ -91,20 +91,20 @@ def create_conv_rotation_classifier_block(num_classes=4):
         create_NIN_block(NCHANNELS1, 3, 'Block3_Conv1'),
         create_NIN_block(NCHANNELS1, 1, 'Block3_Conv2'),
         create_NIN_block(NCHANNELS1, 1, 'Block3_Conv3'),
-        tf.keras.layers.AveragePooling2D(pool_size=3,strides=2,padding='same', name='Block3_AvgPool'), 
+        # tf.keras.layers.AveragePooling2D(pool_size=3,strides=2,padding='same', name='Block3_AvgPool'), 
 
         # block 4
         create_NIN_block(NCHANNELS1, 3, 'Block4_Conv1'),
         create_NIN_block(NCHANNELS1, 1, 'Block4_Conv2'),
         create_NIN_block(NCHANNELS1, 1, 'Block4_Conv3'),
 
-        # block 5
-        create_NIN_block(NCHANNELS1, 3, 'Block5_Conv1'),
-        create_NIN_block(NCHANNELS1, 1, 'Block5_Conv2'),
-        create_NIN_block(NCHANNELS1, 1, 'Block5_Conv3'),
+        # # block 5
+        # create_NIN_block(NCHANNELS1, 3, 'Block5_Conv1'),
+        # create_NIN_block(NCHANNELS1, 1, 'Block5_Conv2'),
+        # create_NIN_block(NCHANNELS1, 1, 'Block5_Conv3'),
 
         GlobalAveragePooling(name='Global_Avg_Pool'),    
-        tf.keras.layers.Dense(num_classes, name='Linear_Classifier')
+        tf.keras.layers.Dense(num_classes, name='Linear_Classifier', activation='softmax')
     ],
     name = 'Rot_Classifier')
     return model
@@ -177,7 +177,12 @@ class RotationSupervisedModel(Model):
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             return (tf.expand_dims(element['pixels'], 2),
@@ -190,7 +195,12 @@ class RotationSupervisedModel(Model):
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),
@@ -206,7 +216,12 @@ class RotationSupervisedModel(Model):
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),
@@ -232,7 +247,7 @@ class RotationSelfSupervisedModel(Model):
         '''
         model = tf.keras.models.Sequential([
             create_feature_extractor_block(self.input_shape),
-            create_conv_rotation_classifier_block(self.input_shape)
+            create_conv_rotation_classifier_block()
         ])
 
         model.compile(
@@ -248,7 +263,12 @@ class RotationSelfSupervisedModel(Model):
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.expand_dims(element['pixels'], 2)
@@ -266,7 +286,12 @@ class RotationSelfSupervisedModel(Model):
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),
@@ -285,7 +310,12 @@ class RotationSelfSupervisedModel(Model):
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),

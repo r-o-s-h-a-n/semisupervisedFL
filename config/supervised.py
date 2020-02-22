@@ -18,7 +18,8 @@ config['shuffle_buffer'] = 100
 config['num_rounds'] = 1
 config['log_every'] = 1
 config['model_fp'] = 'classifier.h5'
-config['pretrained_model_fp'] = 'logs/autoencoder_2020-02-13T07:42:28.121198/run_0/autoencoder.h5' # FILE PATH SHOULD LOOK SOMETHING LIKE THIS ONCE YOU'VE TRAINED IT
+config['pretrained_model_fp'] = None
+# config['pretrained_model_fp'] = 'logs/autoencoder_2020-02-13T07:42:28.121198/run_0/autoencoder.h5' # FILE PATH SHOULD LOOK SOMETHING LIKE THIS ONCE YOU'VE TRAINED IT
 
 config['optimizer'] = 'SGD'
 config['learning_rate'] = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries=[35, 70, 85], 

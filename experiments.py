@@ -175,13 +175,19 @@ class SupervisedLearningCentral(Algorithm):
             # centralized training
             model = self.keras_model_fn()
 
+            tf.keras.utils.plot_model(model, 'model.png', expand_nested=True)
+
+
             # for epoch in range(self.num_epochs):
+
+            # model.fit(train_dataset, epochs=100)
+
             epoch = 0
             while True:
                 for batch in iter(train_dataset):
                     break
                     
-                model.fit(batch[0], batch[1])
+                model.fit(batch[0], batch[1], epochs=100)
                 # model.fit(train_dataset)
                 
                 if not epoch % self.log_every:

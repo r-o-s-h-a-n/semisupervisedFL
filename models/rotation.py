@@ -3,10 +3,15 @@ import collections
 import warnings
 from six.moves import range
 import numpy as np
+import math
 import six
 import tensorflow as tf
 import tensorflow_federated as tff
 from models.model import Model
+
+from tensorflow.python.framework import dtypes
+from tensorflow.python.ops import random_ops
+
 
 
 NCHANNELS1 = 192
@@ -17,11 +22,72 @@ INPUT_SHAPES = {'emnist': (28,28,1), 'cifar100': (32,32,3), 'cifar10central': (3
 OUTPUT_SHAPES = {'emnist': 10, 'cifar100': 100, 'cifar10central': 10}
 
 
+def _assert_float_dtype(dtype):
+  """Validate and return floating point type based on `dtype`.
+  `dtype` must be a floating point type.
+  Args:
+    dtype: The data type to validate.
+  Returns:
+    Validated type.
+  Raises:
+    ValueError: if `dtype` is not a floating point type.
+  """
+  if not dtype.is_floating:
+    raise ValueError("Expected floating point type, got %s." % dtype)
+  return dtype
+
+class ConvInitializer(tf.keras.initializers.Initializer):
+    '''
+    Conv weight initializer used by Rotation Net paper.
+    '''
+    def __init__(self, 
+                kernel_size,
+                out_channels,
+                seed=None, 
+                dtype=dtypes.float32):
+        assert (isinstance(kernel_size, int) or (isinstance(kernel_size, tuple) and len(kernel_size)==2)), 'kernel size must be int or tuple'
+
+        super(ConvInitializer, self).__init__()
+        self.dtype = _assert_float_dtype(dtypes.as_dtype(dtype))
+        self.kernel_size = kernel_size
+        self.out_channels = out_channels
+        self.seed = seed
+
+    def __call__(self, shape, dtype=None):
+        if dtype is None:
+            dtype = self.dtype
+        
+        if isinstance(self.kernel_size, int):
+            n = self.kernel_size * self.kernel_size * self.out_channels
+        else:
+            n = self.kernel_size[0] * self.kernel_size[1] * self.out_channels
+        stddev = math.sqrt(2/n)
+        return random_ops.random_normal(shape, 0.0, stddev, dtype, seed=self.seed)
+
+    def get_config(self):
+        return {
+            "kernel_size": self.kernel_size,
+            "out_channels": self.out_channels,
+            "seed": self.seed,
+            "dtype": self.dtype.name
+        }
+
+
 def create_NIN_block(out_planes, kernel_size, name=None):
     model = tf.keras.models.Sequential([
         tf.keras.layers.Conv2D(
-            out_planes, kernel_size=kernel_size, strides=1, padding='same', use_bias=False),
-        tf.keras.layers.BatchNormalization(axis=-1),
+            out_planes, 
+            kernel_size=kernel_size, 
+            strides=1, 
+            padding='same', 
+            use_bias=False,
+            kernel_initializer=ConvInitializer(kernel_size, out_planes)
+            ),
+        tf.keras.layers.BatchNormalization(
+            axis=-1,
+            epsilon=1E-5,
+            momentum=0.1
+            ),
         tf.keras.layers.ReLU()
     ], name=name)
     return  model
@@ -33,12 +99,12 @@ class GlobalAveragePooling(tf.keras.layers.Layer):
     
     def build(self, input_shape):
         self.avgpool = tf.keras.layers.AveragePooling2D(
-                                        pool_size=(input_shape[1], input_shape[2]), padding='same')
-        self.flatten = tf.keras.layers.Flatten()
+                                        pool_size=(input_shape[1], input_shape[2]), padding='valid')
+        self.reshape = tf.keras.layers.Reshape((-1, input_shape[-1]))
 
     def call(self, input):
         x = self.avgpool(input)
-        return self.flatten(x)
+        return self.reshape(x)
 
 
 def create_feature_extractor_block(input_shape):
@@ -94,9 +160,9 @@ def create_conv_rotation_classifier_block(num_classes=4):
         # tf.keras.layers.AveragePooling2D(pool_size=3,strides=2,padding='same', name='Block3_AvgPool'), 
 
         # block 4
-        create_NIN_block(NCHANNELS1, 3, 'Block4_Conv1'),
-        create_NIN_block(NCHANNELS1, 1, 'Block4_Conv2'),
-        create_NIN_block(NCHANNELS1, 1, 'Block4_Conv3'),
+        # create_NIN_block(NCHANNELS1, 3, 'Block4_Conv1'),
+        # create_NIN_block(NCHANNELS1, 1, 'Block4_Conv2'),
+        # create_NIN_block(NCHANNELS1, 1, 'Block4_Conv3'),
 
         # # block 5
         # create_NIN_block(NCHANNELS1, 3, 'Block5_Conv1'),
@@ -104,7 +170,7 @@ def create_conv_rotation_classifier_block(num_classes=4):
         # create_NIN_block(NCHANNELS1, 1, 'Block5_Conv3'),
 
         GlobalAveragePooling(name='Global_Avg_Pool'),    
-        tf.keras.layers.Dense(num_classes, name='Linear_Classifier', activation='softmax')
+        tf.keras.layers.Dense(num_classes, name='Linear_Classifier')
     ],
     name = 'Rot_Classifier')
     return model

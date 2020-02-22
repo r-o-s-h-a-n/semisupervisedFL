@@ -170,17 +170,15 @@ class SupervisedLearningCentral(Algorithm):
             train_dataset = self.dataloader.preprocess_dataset(train_dataset)
             test_dataset = self.dataloader.preprocess_dataset(test_dataset)
 
-            plots.plot_images(next(iter(test_dataset)), 'plots', 20)
+            # plots.plot_images(next(iter(test_dataset)), 'plots', 20)
+            print(next(iter(test_dataset)))
 
             # centralized training
             model = self.keras_model_fn()
 
-            tf.keras.utils.plot_model(model, 'model.png', expand_nested=True)
-
-
             # for epoch in range(self.num_epochs):
 
-            # model.fit(train_dataset, epochs=100)
+            model.fit(train_dataset, epochs=200)
 
             epoch = 0
             while True:

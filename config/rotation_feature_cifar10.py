@@ -20,18 +20,18 @@ config['log_every'] = 1
 config['model_fp'] = 'rotation_feature.h5'
 
 config['optimizer'] = 'SGD'
-config['learning_rate'] = 0.0001
-# config['learning_rate'] = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries=[35, 70, 85], 
-                                                                                # values=[0.1,0.02,0.004,0.0008])
+# config['learning_rate'] = 0.001
+config['learning_rate'] = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries=[35, 70, 85], 
+                                                                                values=[0.1,0.02,0.004,0.0008])
 config['nesterov'] = True
 config['momentum'] = 0.9
-config['decay'] = 0.0 #5E-4
+config['decay'] = 5E-4
 
 ######### EXPERIMENTAL PARAMETERS ###############
 hparam_map = {'supervised_mask_ratio': hp.HParam('supervised_mask_ratio', hp.Discrete([0.0])),
                 'unsupervised_mask_ratio': hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0])),
                 'mask_by': hp.HParam('mask_by', hp.Discrete(['example'])),
-                'dataset': hp.HParam('dataset', hp.Discrete(['emnist'])),
+                'dataset': hp.HParam('dataset', hp.Discrete(['cifar10central'])),
                 'batch_size': hp.HParam('batch_size', hp.Discrete([4*128]))
 }
 

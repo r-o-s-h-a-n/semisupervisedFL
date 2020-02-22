@@ -36,6 +36,12 @@ def _assert_float_dtype(dtype):
     raise ValueError("Expected floating point type, got %s." % dtype)
   return dtype
 
+
+class SoftmaxCrossEntropyLoss(tf.keras.losses.Loss):
+    def __call__(self, y_true, y_pred):
+        return tf.nn.sparse_softmax_cross_entropy_with_logits(y_true,y_pred)
+
+
 class ConvInitializer(tf.keras.initializers.Initializer):
     '''
     Conv weight initializer used by Rotation Net paper.
@@ -104,7 +110,8 @@ class GlobalAveragePooling(tf.keras.layers.Layer):
 
     def call(self, input):
         x = self.avgpool(input)
-        return self.reshape(x)
+        x = self.reshape(x)
+        return x
 
 
 def create_feature_extractor_block(input_shape):
@@ -160,17 +167,19 @@ def create_conv_rotation_classifier_block(num_classes=4):
         # tf.keras.layers.AveragePooling2D(pool_size=3,strides=2,padding='same', name='Block3_AvgPool'), 
 
         # block 4
-        # create_NIN_block(NCHANNELS1, 3, 'Block4_Conv1'),
-        # create_NIN_block(NCHANNELS1, 1, 'Block4_Conv2'),
-        # create_NIN_block(NCHANNELS1, 1, 'Block4_Conv3'),
+        create_NIN_block(NCHANNELS1, 3, 'Block4_Conv1'),
+        create_NIN_block(NCHANNELS1, 1, 'Block4_Conv2'),
+        create_NIN_block(NCHANNELS1, 1, 'Block4_Conv3'),
 
         # # block 5
         # create_NIN_block(NCHANNELS1, 3, 'Block5_Conv1'),
         # create_NIN_block(NCHANNELS1, 1, 'Block5_Conv2'),
         # create_NIN_block(NCHANNELS1, 1, 'Block5_Conv3'),
 
-        GlobalAveragePooling(name='Global_Avg_Pool'),    
+        GlobalAveragePooling(name='Global_Avg_Pool'),
+        # tf.keras.layers.Dense(num_classes, name='Linear_Classifier', activation='softmax')
         tf.keras.layers.Dense(num_classes, name='Linear_Classifier')
+
     ],
     name = 'Rot_Classifier')
     return model
@@ -317,7 +326,8 @@ class RotationSelfSupervisedModel(Model):
         ])
 
         model.compile(
-            loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+            # loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+            loss = SoftmaxCrossEntropyLoss(),
             optimizer=self.optimizer(learning_rate=self.learning_rate,
                                         nesterov=self.nesterov,
                                         momentum=self.momentum, 
@@ -360,12 +370,13 @@ class RotationSelfSupervisedModel(Model):
             num_epochs = 1
 
         def element_fn(element):
-            img = tf.math.divide(tf.cast(element['image'], tf.float32),
-                                tf.constant(255.0, dtype=tf.float32))
+            img = tf.cast(element['image'], tf.float32) 
+            img = tf.math.subtract(img, tf.convert_to_tensor([0.49139968, 0.48215841, 0.44653091], dtype=tf.float32))
+            img = tf.math.divide(img, tf.convert_to_tensor([0.24703223, 0.24348513, 0.26158784], dtype=tf.float32))
 
             rotated_elements = (
                 tf.data.Dataset.from_tensor_slices([rotate_img_tensor(img, rot) for rot in [0, 90, 180, 270]]),
-                tf.data.Dataset.from_tensor_slices([0,1,2,3])
+                tf.data.Dataset.from_tensor_slices([[0],[1],[2],[3]])
             )
             return tf.data.Dataset.zip(rotated_elements)
 
@@ -384,12 +395,17 @@ class RotationSelfSupervisedModel(Model):
             num_epochs = 1
 
         def element_fn(element):
-            img = tf.math.divide(tf.cast(element['image'], tf.float32),
-                                tf.constant(255.0, dtype=tf.float32))
+            # img = tf.math.divide(tf.cast(element['image'], tf.float32),
+                                # tf.constant(255.0, dtype=tf.float32))
+            img = tf.cast(element['image'], tf.float32)
+            img = tf.math.subtract(img, tf.convert_to_tensor([255*0.49139968, 255*0.48215841, 255*0.44653091], dtype=tf.float32))
+            img = tf.math.divide(img, tf.convert_to_tensor([255*0.24703223, 255*0.24348513, 255*0.26158784], dtype=tf.float32))
 
             rotated_elements = (
                 tf.data.Dataset.from_tensor_slices([rotate_img_tensor(img, rot) for rot in [0, 90, 180, 270]]),
-                tf.data.Dataset.from_tensor_slices([0,1,2,3])
+                # tf.data.Dataset.from_tensor_slices([0,1,2,3])
+                # tf.data.Dataset.from_tensor_slices([0.0,1.0,2.0,3.0])
+                tf.data.Dataset.from_tensor_slices([[0],[1],[2],[3]])
             )
             return tf.data.Dataset.zip(rotated_elements)
 

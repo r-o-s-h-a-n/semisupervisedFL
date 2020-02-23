@@ -56,7 +56,8 @@ class SupervisedLearningFL(Algorithm):
                                                         mask_ratios = {'unsupervised': self.ph['unsupervised_mask_ratio'],
                                                                         'supervised': self.ph['supervised_mask_ratio']
                                                         },
-                                                        sample_client_data = self.ph['sample_client_data']
+                                                        sample_client_data = self.ph['sample_client_data'],
+                                                        shuffle_buffer = self.ph['shuffle_buffer']
             )
             test_dataset = self.dataloader.preprocess_dataset(test_dataset)
             sample_batch = self.dataloader.get_sample_batch(train_client_data)
@@ -166,7 +167,8 @@ class SupervisedLearningCentral(Algorithm):
                                                         mask_ratios = {'unsupervised': self.ph['unsupervised_mask_ratio'],
                                                                         'supervised': self.ph['supervised_mask_ratio']
                                                         },
-                                                        sample_client_data = self.ph['sample_client_data']
+                                                        sample_client_data = self.ph['sample_client_data'],
+                                                        shuffle_buffer = self.ph['shuffle_buffer']
             )
 
             train_dataset = train_client_data.create_tf_dataset_from_all_clients()

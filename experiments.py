@@ -62,6 +62,9 @@ class SupervisedLearningFL(Algorithm):
             sample_batch = self.dataloader.get_sample_batch(train_client_data)
             model_fn = functools.partial(self.keras_model_fn.create_tff_model_fn, sample_batch)
 
+            print(sample_batch)
+            print(tf.shape(sample_batch[0]))
+
             # federated training
             iterative_process = tff.learning.build_federated_averaging_process(model_fn)
             state = iterative_process.initialize()

@@ -25,11 +25,7 @@ config['pretrained_model_fp'] = None
 
 config['optimizer'] = 'SGD'
 config['nesterov'] = True
-config['learning_rate'] = 0.02
-# config['learning_rate'] = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries=[60, 120, 160], 
-                                                                                # values=[0.1,0.02,0.004,0.0008])
-# config['learning_rate'] = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries=[30, 60, 80], 
-#                                                                                 values=[0.1,0.02,0.004,0.0008])
+config['learning_rate'] = 0.004
 config['momentum'] = 0.9
 config['decay'] = 0 #5E-4
 

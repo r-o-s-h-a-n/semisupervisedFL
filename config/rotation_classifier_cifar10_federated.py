@@ -8,7 +8,7 @@ config = {}
 
 config['experiment'] = 'SupervisedLearningFL'
 config['model_fn'] = 'RotationSupervisedModel'
-config['sample_client_data'] = True      # must set to False when running real experiments
+config['sample_client_data'] = False      # must set to False when running real experiments
 config['curr_run_number'] = 0                  # always initialize as 0, unless starting from a certain run
 
 # data loading
@@ -16,8 +16,8 @@ config['shuffle_buffer'] = 1
 
 # training
 config['num_rounds'] = 200
-config['num_clients_per_round'] = 10
-config['num_epochs'] = 5
+config['num_clients_per_round'] = 25
+config['num_epochs'] = 10
 config['log_every'] = 1
 config['model_fp'] = 'rotation_label_classifier.h5'
 # config['pretrained_model_fp'] = 'logs/rotation_feature_cifar10/run_0/rotation_feature.h5' # PLEASE CHANGE ME TO THE LOCATION OF THE PRETRAINED FEATURE EXTRACTOR MODEL

@@ -13,7 +13,6 @@ from tensorflow.python.framework import dtypes
 from tensorflow.python.ops import random_ops
 
 
-
 NCHANNELS1 = 192
 NCHANNELS2 = 160
 NCHANNELS3 = 96
@@ -35,11 +34,6 @@ def _assert_float_dtype(dtype):
   if not dtype.is_floating:
     raise ValueError("Expected floating point type, got %s." % dtype)
   return dtype
-
-
-class SoftmaxCrossEntropyLoss(tf.keras.losses.Loss):
-    def __call__(self, y_true, y_pred):
-        return tf.nn.sparse_softmax_cross_entropy_with_logits(y_true,y_pred)
 
 
 class ConvInitializer(tf.keras.initializers.Initializer):
@@ -152,7 +146,7 @@ def create_conv_label_classifier_block(num_classes=10):
         # create_NIN_block(nChannels1, 1, 'Block5_Conv3'),
 
         GlobalAveragePooling(name='Global_Avg_Pool'),
-        tf.keras.layers.Dense(num_classes, name='Linear_Classifier')
+        tf.keras.layers.Dense(num_classes, name='Linear_Classifier', activation='softmax')
     ],
     name = 'Label_Classifier')
     return model
@@ -224,12 +218,13 @@ class RotationSupervisedModel(Model):
         Model.__init__(self, ph)
         self.output_shape = OUTPUT_SHAPES[self.ph['dataset']]
         self.pretrained_model_fp = self.ph.setdefault('pretrained_model_fp', None)
+        self.input_shape = INPUT_SHAPES[ph['dataset']]
 
     def __call__(self):
         '''
         Returns a compiled keras model.
         '''
-        feature_extractor = create_feature_extractor_block()
+        feature_extractor = create_feature_extractor_block(self.input_shape)
 
         if self.pretrained_model_fp:
             feature_extractor.load_weights(self.pretrained_model_fp, by_name=True)
@@ -326,8 +321,8 @@ class RotationSelfSupervisedModel(Model):
         ])
 
         model.compile(
-            # loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-            loss = SoftmaxCrossEntropyLoss(),
+            loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+            # loss = SoftmaxCrossEntropyLoss(),
             optimizer=self.optimizer(learning_rate=self.learning_rate,
                                         nesterov=self.nesterov,
                                         momentum=self.momentum, 

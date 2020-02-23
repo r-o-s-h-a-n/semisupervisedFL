@@ -170,40 +170,22 @@ class SupervisedLearningCentral(Algorithm):
             train_dataset = self.dataloader.preprocess_dataset(train_dataset)
             test_dataset = self.dataloader.preprocess_dataset(test_dataset)
 
-            # plots.plot_images(next(iter(test_dataset)), 'plots', 20)
-            print(next(iter(test_dataset)))
-
             # centralized training
             model = self.keras_model_fn()
 
-            # for epoch in range(self.num_epochs):
-
-            model.fit(train_dataset, epochs=200)
-
-            epoch = 0
-            while True:
-                for batch in iter(train_dataset):
-                    break
+            for epoch in range(self.num_epochs):
+                model.fit(train_dataset)
                     
-                model.fit(batch[0], batch[1], epochs=100)
-                # model.fit(train_dataset)
-                
                 if not epoch % self.log_every:
-                    plots.plot_images(batch, 'evals', 20)
-                    print(model.predict(batch[0]))
+                    train_loss, train_accuracy = model.evaluate(train_dataset)
+                    tf.summary.scalar('train_accuracy', train_accuracy, step=epoch)
+                    tf.summary.scalar('train_loss', train_loss, step=epoch)
 
-                    # plots.plot_images(next(iter(batch)), 'evals', 20)
-                    # print(model.predict(next(iter(batch))[0]))
-
-                    # train_loss, train_accuracy = model.evaluate(train_dataset)
-                    # tf.summary.scalar('train_accuracy', train_accuracy, step=epoch)
-                    # tf.summary.scalar('train_loss', train_loss, step=epoch)
-
-                    # test_loss, test_accuracy = model.evaluate(test_dataset)
-                    # tf.summary.scalar('test_accuracy', test_accuracy, step=epoch)
-                    # tf.summary.scalar('test_loss', test_loss, step=epoch)
-                    # print('\nepoch {:2d}, train accuracy={} train loss={} test accuracy={} test loss={}'.format(
-                    #             epoch, train_accuracy, train_loss, test_accuracy, test_loss))
+                    test_loss, test_accuracy = model.evaluate(test_dataset)
+                    tf.summary.scalar('test_accuracy', test_accuracy, step=epoch)
+                    tf.summary.scalar('test_loss', test_loss, step=epoch)
+                    print('\nepoch {:2d}, train accuracy={} train loss={} test accuracy={} test loss={}'.format(
+                                epoch, train_accuracy, train_loss, test_accuracy, test_loss))
 
             train_loss, train_accuracy = model.evaluate(train_dataset)
             tf.summary.scalar('train_accuracy', train_accuracy, step=epoch)
@@ -212,7 +194,7 @@ class SupervisedLearningCentral(Algorithm):
             test_loss, test_accuracy = model.evaluate(test_dataset)
             tf.summary.scalar('test_accuracy', test_accuracy, step=epoch)
             tf.summary.scalar('test_loss', test_loss, step=epoch)
-            print('\nepoch {:2d}, train accuracy={} train loss={} test accuracy={} test loss={}'.format(
+            print('\n\n\nepoch {:2d}, train accuracy={} train loss={} test accuracy={} test loss={}'.format(
                                 epoch, train_accuracy, train_loss, test_accuracy, test_loss))
 
         model_fp = os.path.join(run_dir, self.ph['model_fp'])

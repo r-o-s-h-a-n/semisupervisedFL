@@ -7,7 +7,7 @@ from parameter_handler import ParameterHandler
 config = {}
 
 config['experiment'] = 'SupervisedLearningCentral'
-config['model_fn'] = 'RotationSupervisedModel'
+config['model_fn'] = 'RotationSelfSupervisedModel'
 config['sample_client_data'] = False      # must set to False when running real experiments
 config['curr_run_number'] = 0                  # always initialize as 0, unless starting from a certain run
 
@@ -36,8 +36,8 @@ config['decay'] = 0 #5E-4
 hparam_map = {'supervised_mask_ratio': hp.HParam('supervised_mask_ratio', hp.Discrete([0.0])),
                 'unsupervised_mask_ratio': hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0])),
                 'mask_by': hp.HParam('mask_by', hp.Discrete(['example'])),
-                'dataset': hp.HParam('dataset', hp.Discrete(['cifar10central'])),
-                'batch_size': hp.HParam('batch_size', hp.Discrete([128])),
+                'dataset': hp.HParam('dataset', hp.Discrete(['cifar100'])),
+                'batch_size': hp.HParam('batch_size', hp.Discrete([4*128])),
 }
 
 ######### METRICS ###############################

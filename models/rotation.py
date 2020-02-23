@@ -133,17 +133,6 @@ def create_conv_label_classifier_block(num_classes=10):
         create_NIN_block(NCHANNELS1, 3, 'Block3_Conv1'),
         create_NIN_block(NCHANNELS1, 1, 'Block3_Conv2'),
         create_NIN_block(NCHANNELS1, 1, 'Block3_Conv3'),
-        # tf.keras.layers.AveragePooling2d(pool_size=3,strides=2,padding=1, name='Block3_AvgPool'), 
-
-        # # block 4
-        # create_NIN_block(nChannels1, 3, 'Block4_Conv1'),
-        # create_NIN_block(nChannels1, 1, 'Block4_Conv2'),
-        # create_NIN_block(nChannels1, 1, 'Block4_Conv3'),
-
-        # # block 5
-        # create_NIN_block(nChannels1, 3, 'Block5_Conv1'),
-        # create_NIN_block(nChannels1, 1, 'Block5_Conv2'),
-        # create_NIN_block(nChannels1, 1, 'Block5_Conv3'),
 
         GlobalAveragePooling(name='Global_Avg_Pool'),
         tf.keras.layers.Dense(num_classes, name='Linear_Classifier', activation='softmax')
@@ -158,21 +147,14 @@ def create_conv_rotation_classifier_block(num_classes=4):
         create_NIN_block(NCHANNELS1, 3, 'Block3_Conv1'),
         create_NIN_block(NCHANNELS1, 1, 'Block3_Conv2'),
         create_NIN_block(NCHANNELS1, 1, 'Block3_Conv3'),
-        # tf.keras.layers.AveragePooling2D(pool_size=3,strides=2,padding='same', name='Block3_AvgPool'), 
 
         # block 4
         create_NIN_block(NCHANNELS1, 3, 'Block4_Conv1'),
         create_NIN_block(NCHANNELS1, 1, 'Block4_Conv2'),
         create_NIN_block(NCHANNELS1, 1, 'Block4_Conv3'),
 
-        # # block 5
-        # create_NIN_block(NCHANNELS1, 3, 'Block5_Conv1'),
-        # create_NIN_block(NCHANNELS1, 1, 'Block5_Conv2'),
-        # create_NIN_block(NCHANNELS1, 1, 'Block5_Conv3'),
-
         GlobalAveragePooling(name='Global_Avg_Pool'),
-        # tf.keras.layers.Dense(num_classes, name='Linear_Classifier', activation='softmax')
-        tf.keras.layers.Dense(num_classes, name='Linear_Classifier')
+        tf.keras.layers.Dense(num_classes, name='Linear_Classifier', activation='softmax')
 
     ],
     name = 'Rot_Classifier')
@@ -273,8 +255,9 @@ class RotationSupervisedModel(Model):
             num_epochs = 1
 
         def element_fn(element):
-            img = tf.math.divide(tf.cast(element['image'], tf.float32),
-                                tf.constant(255.0, dtype=tf.float32))
+            img = tf.cast(element['image'], tf.float32)
+            img = tf.math.subtract(img, tf.convert_to_tensor([255*0.49139968, 255*0.48215841, 255*0.44653091], dtype=tf.float32))
+            img = tf.math.divide(img, tf.convert_to_tensor([255*0.24703223, 255*0.24348513, 255*0.26158784], dtype=tf.float32))
 
             return (img,
                     tf.reshape(element['label'], [1]))
@@ -294,8 +277,9 @@ class RotationSupervisedModel(Model):
             num_epochs = 1
 
         def element_fn(element):
-            img = tf.math.divide(tf.cast(element['image'], tf.float32),
-                                tf.constant(255.0, dtype=tf.float32))
+            img = tf.cast(element['image'], tf.float32)
+            img = tf.math.subtract(img, tf.convert_to_tensor([255*0.49139968, 255*0.48215841, 255*0.44653091], dtype=tf.float32))
+            img = tf.math.divide(img, tf.convert_to_tensor([255*0.24703223, 255*0.24348513, 255*0.26158784], dtype=tf.float32))
 
             return (img,
                     tf.reshape(element['label'], [1]))
@@ -322,7 +306,6 @@ class RotationSelfSupervisedModel(Model):
 
         model.compile(
             loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-            # loss = SoftmaxCrossEntropyLoss(),
             optimizer=self.optimizer(learning_rate=self.learning_rate,
                                         nesterov=self.nesterov,
                                         momentum=self.momentum, 
@@ -365,9 +348,9 @@ class RotationSelfSupervisedModel(Model):
             num_epochs = 1
 
         def element_fn(element):
-            img = tf.cast(element['image'], tf.float32) 
-            img = tf.math.subtract(img, tf.convert_to_tensor([0.49139968, 0.48215841, 0.44653091], dtype=tf.float32))
-            img = tf.math.divide(img, tf.convert_to_tensor([0.24703223, 0.24348513, 0.26158784], dtype=tf.float32))
+            img = tf.cast(element['image'], tf.float32)
+            img = tf.math.subtract(img, tf.convert_to_tensor([255*0.49139968, 255*0.48215841, 255*0.44653091], dtype=tf.float32))
+            img = tf.math.divide(img, tf.convert_to_tensor([255*0.24703223, 255*0.24348513, 255*0.26158784], dtype=tf.float32))
 
             rotated_elements = (
                 tf.data.Dataset.from_tensor_slices([rotate_img_tensor(img, rot) for rot in [0, 90, 180, 270]]),
@@ -390,16 +373,12 @@ class RotationSelfSupervisedModel(Model):
             num_epochs = 1
 
         def element_fn(element):
-            # img = tf.math.divide(tf.cast(element['image'], tf.float32),
-                                # tf.constant(255.0, dtype=tf.float32))
             img = tf.cast(element['image'], tf.float32)
             img = tf.math.subtract(img, tf.convert_to_tensor([255*0.49139968, 255*0.48215841, 255*0.44653091], dtype=tf.float32))
             img = tf.math.divide(img, tf.convert_to_tensor([255*0.24703223, 255*0.24348513, 255*0.26158784], dtype=tf.float32))
 
             rotated_elements = (
                 tf.data.Dataset.from_tensor_slices([rotate_img_tensor(img, rot) for rot in [0, 90, 180, 270]]),
-                # tf.data.Dataset.from_tensor_slices([0,1,2,3])
-                # tf.data.Dataset.from_tensor_slices([0.0,1.0,2.0,3.0])
                 tf.data.Dataset.from_tensor_slices([[0],[1],[2],[3]])
             )
             return tf.data.Dataset.zip(rotated_elements)

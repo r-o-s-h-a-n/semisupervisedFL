@@ -15,7 +15,9 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 100
 
 # training
-config['num_epochs'] = 100
+config['num_rounds'] = 200
+config['num_clients_per_round'] = 50
+config['num_epochs'] = 10
 config['log_every'] = 1
 config['model_fp'] = 'rotation_label_classifier.h5'
 # config['pretrained_model_fp'] = 'logs/rotation_feature_cifar10/run_0/rotation_feature.h5' # PLEASE CHANGE ME TO THE LOCATION OF THE PRETRAINED FEATURE EXTRACTOR MODEL
@@ -23,18 +25,19 @@ config['pretrained_model_fp'] = None
 
 config['optimizer'] = 'SGD'
 config['nesterov'] = True
-config['learning_rate'] = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries=[60, 120, 160], 
-                                                                                values=[0.1,0.02,0.004,0.0008])
+config['learning_rate'] = 0.02
+# config['learning_rate'] = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries=[60, 120, 160], 
+                                                                                # values=[0.1,0.02,0.004,0.0008])
 # config['learning_rate'] = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries=[30, 60, 80], 
 #                                                                                 values=[0.1,0.02,0.004,0.0008])
 config['momentum'] = 0.9
-config['decay'] = 5E-4
+config['decay'] = 0 #5E-4
 
 ######### EXPERIMENTAL PARAMETERS ###############
 hparam_map = {'supervised_mask_ratio': hp.HParam('supervised_mask_ratio', hp.Discrete([0.0])),
                 'unsupervised_mask_ratio': hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0])),
                 'mask_by': hp.HParam('mask_by', hp.Discrete(['example'])),
-                'dataset': hp.HParam('dataset', hp.Discrete(['cifar10central'])),
+                'dataset': hp.HParam('dataset', hp.Discrete(['cifar100'])),
                 'batch_size': hp.HParam('batch_size', hp.Discrete([128])),
 }
 

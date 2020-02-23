@@ -37,9 +37,9 @@ def _assert_float_dtype(dtype):
   return dtype
 
 
-class SoftmaxCrossEntropyLoss(tf.keras.losses.Loss):
-    def __call__(self, y_true, y_pred):
-        return tf.nn.sparse_softmax_cross_entropy_with_logits(y_true,y_pred)
+# class SoftmaxCrossEntropyLoss(tf.keras.losses.Loss):
+#     def __call__(self, y_true, y_pred):
+#         return tf.nn.sparse_softmax_cross_entropy_with_logits(y_true,y_pred)
 
 
 class ConvInitializer(tf.keras.initializers.Initializer):
@@ -78,8 +78,35 @@ class ConvInitializer(tf.keras.initializers.Initializer):
             "dtype": self.dtype.name
         }
 
+class DenseInitializer(tf.keras.initializers.Initializer):
+    '''
+    Dense weight initializer used by Rotation Net paper.
+    '''
+    def __init__(self, 
+                out_channels,
+                seed=None, 
+                dtype=dtypes.float32):
 
-def create_NIN_block(out_planes, kernel_size, name=None):
+        super(DenseInitializer, self).__init__()
+        self.dtype = _assert_float_dtype(dtypes.as_dtype(dtype))
+        self.out_channels = out_channels
+        self.seed = seed
+
+    def __call__(self, shape, dtype=None):
+        if dtype is None:
+            dtype = self.dtype
+        
+        stddev = math.sqrt(2.0 / self.out_channels)
+        return random_ops.random_normal(shape, 0.0, stddev, dtype, seed=self.seed)
+
+    def get_config(self):
+        return {
+            "out_channels": self.out_channels,
+            "seed": self.seed,
+            "dtype": self.dtype.name
+        }
+
+def create_NIN_block(out_planes, kernel_size, name=None, trainable=True):
     model = tf.keras.models.Sequential([
         tf.keras.layers.Conv2D(
             out_planes, 
@@ -87,12 +114,14 @@ def create_NIN_block(out_planes, kernel_size, name=None):
             strides=1, 
             padding='same', 
             use_bias=False,
-            kernel_initializer=ConvInitializer(kernel_size, out_planes)
+            kernel_initializer=ConvInitializer(kernel_size, out_planes),
+            trainable=trainable
             ),
         tf.keras.layers.BatchNormalization(
             axis=-1,
             epsilon=1E-5,
-            momentum=0.1
+            momentum=0.1,
+            trainable=trainable
             ),
         tf.keras.layers.ReLU()
     ], name=name)
@@ -114,19 +143,19 @@ class GlobalAveragePooling(tf.keras.layers.Layer):
         return x
 
 
-def create_feature_extractor_block(input_shape):
+def create_feature_extractor_block(input_shape, trainable=True):
     model = tf.keras.models.Sequential([
         tf.keras.layers.InputLayer(input_shape),
         # block 1
-        create_NIN_block(NCHANNELS1, 5, 'Block1_Conv1'),
-        create_NIN_block(NCHANNELS2, 1, 'Block1_Conv2'),
-        create_NIN_block(NCHANNELS3, 1, 'Block1_Conv3'),
+        create_NIN_block(NCHANNELS1, 5, 'Block1_Conv1', trainable=trainable),
+        create_NIN_block(NCHANNELS2, 1, 'Block1_Conv2', trainable=trainable),
+        create_NIN_block(NCHANNELS3, 1, 'Block1_Conv3', trainable=trainable),
         tf.keras.layers.MaxPool2D(pool_size=3,strides=2,padding='same', name='Block1_MaxPool'),
 
         # block 2
-        create_NIN_block(NCHANNELS1, 5, 'Block2_Conv1'),
-        create_NIN_block(NCHANNELS1, 1, 'Block2_Conv2'),
-        create_NIN_block(NCHANNELS1, 1, 'Block2_Conv3'),
+        create_NIN_block(NCHANNELS1, 5, 'Block2_Conv1', trainable=trainable),
+        create_NIN_block(NCHANNELS1, 1, 'Block2_Conv2', trainable=trainable),
+        create_NIN_block(NCHANNELS1, 1, 'Block2_Conv3', trainable=trainable),
         tf.keras.layers.AveragePooling2D(pool_size=3,strides=2,padding='same', name='Block2_AvgPool')
     ], name='Conv_Feature_Extractor')
 
@@ -152,7 +181,10 @@ def create_conv_label_classifier_block(num_classes=10):
         # create_NIN_block(nChannels1, 1, 'Block5_Conv3'),
 
         GlobalAveragePooling(name='Global_Avg_Pool'),
-        tf.keras.layers.Dense(num_classes, name='Linear_Classifier')
+        tf.keras.layers.Dense(num_classes, 
+                                name='Linear_Classifier', 
+                                activation='softmax',
+                                kernel_initializer=DenseInitializer(num_classes))
     ],
     name = 'Label_Classifier')
     return model
@@ -177,9 +209,11 @@ def create_conv_rotation_classifier_block(num_classes=4):
         # create_NIN_block(NCHANNELS1, 1, 'Block5_Conv3'),
 
         GlobalAveragePooling(name='Global_Avg_Pool'),
-        # tf.keras.layers.Dense(num_classes, name='Linear_Classifier', activation='softmax')
-        tf.keras.layers.Dense(num_classes, name='Linear_Classifier')
-
+        # tf.keras.layers.Dense(num_classes, name='Linear_Classifier')
+        tf.keras.layers.Dense(num_classes,
+                                name='Linear_Classifier', 
+                                activation='softmax',
+                                kernel_initializer=DenseInitializer(num_classes))
     ],
     name = 'Rot_Classifier')
     return model
@@ -222,14 +256,17 @@ def rotate_img_tensor(img, rot):
 class RotationSupervisedModel(Model):
     def __init__(self, ph):
         Model.__init__(self, ph)
+        self.input_shape = INPUT_SHAPES[ph['dataset']]
         self.output_shape = OUTPUT_SHAPES[self.ph['dataset']]
         self.pretrained_model_fp = self.ph.setdefault('pretrained_model_fp', None)
+        self.fine_tune_feature_extractor = self.ph.setdefault('fine_tune_feature_extractor', True)
 
     def __call__(self):
         '''
         Returns a compiled keras model.
         '''
-        feature_extractor = create_feature_extractor_block()
+        feature_extractor = create_feature_extractor_block(self.input_shape, 
+                                                        trainable=self.fine_tune_feature_extractor)
 
         if self.pretrained_model_fp:
             feature_extractor.load_weights(self.pretrained_model_fp, by_name=True)
@@ -321,7 +358,7 @@ class RotationSelfSupervisedModel(Model):
         Returns a compiled keras model.
         '''
         model = tf.keras.models.Sequential([
-            create_feature_extractor_block(self.input_shape),
+            create_feature_extractor_block(self.input_shape, trainable=True),
             create_conv_rotation_classifier_block()
         ])
 

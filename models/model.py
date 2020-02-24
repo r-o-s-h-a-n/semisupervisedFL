@@ -22,8 +22,6 @@ class Model(object):
         self.momentum = ph.setdefault('momentum', None)
         self.decay = ph.setdefault('decay', None)
 
-        # self.saved_model_fp = opt['saved_model_fp']
-
     def __call__(self):
         raise NotImplementedError('must define a class for your model that inherits \
                                   from ModelFunction and implement __call__ method. \

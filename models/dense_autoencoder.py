@@ -11,7 +11,7 @@ from models.model import Model
 
 ENCODER_SIZE = 256
 INPUT_SIZE = {'emnist': 784, 'cifar100': 3072, 'cifar10central': 3072}
-OUTPUT_SIZE = {'emnist': 10, 'cifar100': 100, 'cifar10central': 10}
+OUTPUT_SIZE = {'emnist': 10, 'cifar100': 20, 'cifar10central': 10}
 
 
 def create_encoder_keras_model(input_size):
@@ -72,7 +72,12 @@ class DenseSupervisedModel(Model):
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             return (tf.reshape(element['pixels'], [-1]),
@@ -85,14 +90,19 @@ class DenseSupervisedModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),
                                 tf.constant(255.0, dtype=tf.float32))
 
             return (tf.reshape(img, [-1]),
-                tf.reshape(element['label'], [1]))
+                tf.reshape(element['coarse_label'], [1]))
 
         return dataset.filter(lambda x: not x['is_masked_unsupervised'] if 'is_masked_unsupervised' in x else True).repeat(
             num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
@@ -101,7 +111,12 @@ class DenseSupervisedModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),
@@ -142,7 +157,12 @@ class DenseAutoencoderModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             return (tf.reshape(element['pixels'], [-1]),
@@ -155,7 +175,12 @@ class DenseAutoencoderModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),
@@ -171,7 +196,12 @@ class DenseAutoencoderModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),

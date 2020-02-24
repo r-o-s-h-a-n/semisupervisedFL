@@ -8,7 +8,8 @@ import tensorflow as tf
 import tensorflow_federated as tff
 import datetime
 from tensorboard.plugins.hparams import api as hp
-    
+import plots
+
 
 class Algorithm(object):
     '''
@@ -38,7 +39,8 @@ class SupervisedLearningFL(Algorithm):
                                 self.preprocess_fn,
                                 self.ph['num_epochs'],
                                 self.ph['shuffle_buffer'],
-                                self.ph['batch_size']
+                                self.ph['batch_size'],
+                                'federated'
                                 )
     
     def run(self):
@@ -54,10 +56,10 @@ class SupervisedLearningFL(Algorithm):
                                                         mask_ratios = {'unsupervised': self.ph['unsupervised_mask_ratio'],
                                                                         'supervised': self.ph['supervised_mask_ratio']
                                                         },
-                                                        sample_client_data = self.ph['sample_client_data']
+                                                        sample_client_data = self.ph['sample_client_data'],
+                                                        shuffle_buffer = self.ph['shuffle_buffer']
             )
             test_dataset = self.dataloader.preprocess_dataset(test_dataset)
-
             sample_batch = self.dataloader.get_sample_batch(train_client_data)
             model_fn = functools.partial(self.keras_model_fn.create_tff_model_fn, sample_batch)
 
@@ -73,9 +75,9 @@ class SupervisedLearningFL(Algorithm):
                                                 )
                 federated_train_data = self.dataloader.make_federated_data(train_client_data, sample_clients)
                 state, metrics = iterative_process.next(state, federated_train_data)
+                print('\nround {:2d}, metrics={}'.format(round_num, metrics))
                 
                 if not round_num % self.log_every:
-                    print('\nround {:2d}, metrics={}'.format(round_num, metrics))
                     tf.summary.scalar('train_accuracy', metrics[0], step=round_num)
                     tf.summary.scalar('train_loss', metrics[1], step=round_num)
 
@@ -144,7 +146,8 @@ class SupervisedLearningCentral(Algorithm):
                                 self.preprocess_fn,
                                 self.ph['num_epochs'],
                                 self.ph['shuffle_buffer'],
-                                self.ph['batch_size']
+                                self.ph['batch_size'],
+                                'central'
                                 )
         self.num_epochs = self.ph['num_epochs']
 
@@ -161,7 +164,8 @@ class SupervisedLearningCentral(Algorithm):
                                                         mask_ratios = {'unsupervised': self.ph['unsupervised_mask_ratio'],
                                                                         'supervised': self.ph['supervised_mask_ratio']
                                                         },
-                                                        sample_client_data = self.ph['sample_client_data']
+                                                        sample_client_data = self.ph['sample_client_data'],
+                                                        shuffle_buffer = self.ph['shuffle_buffer']
             )
 
             train_dataset = train_client_data.create_tf_dataset_from_all_clients()
@@ -173,7 +177,7 @@ class SupervisedLearningCentral(Algorithm):
 
             for epoch in range(self.num_epochs):
                 model.fit(train_dataset)
-                
+                    
                 if not epoch % self.log_every:
                     train_loss, train_accuracy = model.evaluate(train_dataset)
                     tf.summary.scalar('train_accuracy', train_accuracy, step=epoch)
@@ -192,7 +196,7 @@ class SupervisedLearningCentral(Algorithm):
             test_loss, test_accuracy = model.evaluate(test_dataset)
             tf.summary.scalar('test_accuracy', test_accuracy, step=epoch)
             tf.summary.scalar('test_loss', test_loss, step=epoch)
-            print('\nepoch {:2d}, train accuracy={} train loss={} test accuracy={} test loss={}'.format(
+            print('\n\n\nepoch {:2d}, train accuracy={} train loss={} test accuracy={} test loss={}'.format(
                                 epoch, train_accuracy, train_loss, test_accuracy, test_loss))
 
         model_fp = os.path.join(run_dir, self.ph['model_fp'])

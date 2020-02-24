@@ -74,7 +74,12 @@ class ConvSupervisedModel(Model):
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.expand_dims(element['pixels'], 2)
@@ -89,7 +94,12 @@ class ConvSupervisedModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),
@@ -105,7 +115,12 @@ class ConvSupervisedModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),
@@ -145,7 +160,12 @@ class ConvAutoencoderModel(Model):
                     dataset, 
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.expand_dims(element['pixels'], 2)
@@ -160,7 +180,12 @@ class ConvAutoencoderModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),
@@ -176,7 +201,12 @@ class ConvAutoencoderModel(Model):
                     dataset,
                     num_epochs, 
                     shuffle_buffer, 
-                    batch_size):
+                    batch_size,
+                    learning_env):
+
+        assert learning_env in ('central', 'federated')
+        if learning_env == 'central':
+            num_epochs = 1
 
         def element_fn(element):
             img = tf.math.divide(tf.cast(element['image'], tf.float32),

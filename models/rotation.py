@@ -21,7 +21,7 @@ CHANNELS_LAST = True
 
 INPUT_SHAPES_CHANNELS_FIRST = {'emnist': (1,28,28), 'cifar100': (3,32,32), 'cifar10central': (3,32,32)}
 INPUT_SHAPES_CHANNELS_LAST = {'emnist': (28,28,1), 'cifar100': (32,32,3), 'cifar10central': (32,32,3)}
-OUTPUT_SHAPES = {'emnist': 10, 'cifar100': 100, 'cifar10central': 10}
+OUTPUT_SHAPES = {'emnist': 10, 'cifar100': 20, 'cifar10central': 10}
 
 
 def _assert_float_dtype(dtype):
@@ -334,7 +334,7 @@ class RotationSupervisedModel(Model):
                 img = tf.transpose(img, [2, 0, 1]) # convert NHWC to NCHW
 
             return (img,
-                    tf.reshape(element['label'], [1]))
+                    tf.reshape(element['coarse_label'], [1]))
 
         return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
             num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
@@ -372,15 +372,18 @@ class RotationSelfSupervisedModel(Model):
     '''
     def __init__(self, ph):
         Model.__init__(self, ph)
-        self.input_shape = INPUT_SHAPES[ph['dataset']]
+        if CHANNELS_LAST:
+            self.input_shape = INPUT_SHAPES_CHANNELS_LAST[ph['dataset']]
+        else:
+            self.input_shape = INPUT_SHAPES_CHANNELS_FIRST[ph['dataset']]
 
     def __call__(self):
         '''
         Returns a compiled keras model.
         '''
         model = tf.keras.models.Sequential([
-            create_feature_extractor_block(self.input_shape, trainable=True),
-            create_conv_rotation_classifier_block()
+            create_feature_extractor_block(self.input_shape, trainable=True, channels_last=CHANNELS_LAST),
+            create_conv_rotation_classifier_block(num_classes=4, channels_last=CHANNELS_LAST)
         ])
 
         model.compile(

@@ -6,7 +6,6 @@ from six.moves import range
 import six
 import tensorflow as tf
 import tensorflow_federated as tff
-import cifar100
 import plots
 
 from tensorflow_federated.python.common_libs import py_typecheck
@@ -28,7 +27,7 @@ def get_client_data(dataset_name, mask_by, mask_ratios=None, sample_client_data=
     train_set, test_set = tff.simulation.datasets.emnist.load_data()
 
   elif dataset_name == 'cifar100':
-    train_set, test_set = cifar100.load_data()
+    train_set, test_set = tff.simulation.datasets.cifar100.load_data()
 
   elif dataset_name == 'cifar10central':
     train_dataset, test_set = tf.keras.datasets.cifar10.load_data()

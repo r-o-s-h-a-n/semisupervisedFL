@@ -1,6 +1,11 @@
 # semisupervisedFL
 Semisupervised and transfer learning trained in federated setting.
 
+Experiments were run using:
+* Python 3.7.4
+* tensorflow 2.1.0
+* tensorflow-federated 0.12.0
+
 To set up your environment, run the following:
 1. `pip install virtualenv`
 2. `virtualenv env` (or `virtualenv <name of your environment>`)
@@ -12,6 +17,8 @@ and you're good to go!
 To run an existing experiment, run `python main.py --exp <experiment_name>`. For example to run a simple classifier on the EMNIST dataset, run `python main.py --exp supervised`. The attribute `experiment_name` must correspond to a config file in the folder `configs`. 
 
 Alternatively if you would like to run an experiment over a set of hyperparameters, run `source run.sh <experiment_name>` to run the experiments over the cartesian product of hyperparameters provided in the config file.
+
+Note, while the dense model can run using tensorflow 2.0.1 and tensorflow federated 0.11.0 on Python3<=3.5, the rotation model requres tensorflow 2.1.0, tensorflow federated 0.12.0, and Python3>=3.6.
 
 ### Monitor results in Tensorboard
 To view the results in Tensorboard, run `tensorboard --logdir=logs/<experiment_name> --port=<port number>`. If running locally, follow the instructions in terminal to connect to `http://localhost:<port number>`. If running remotely, set up port forwarding by running the following on your local machine: `ssh -NfL <port number>:localhost:<port number> -i <path to pem file> <username>@<remote IP address>`. Then go to `http://localhost:<port number>` locally.

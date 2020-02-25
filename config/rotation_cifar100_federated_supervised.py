@@ -16,7 +16,7 @@ config['shuffle_buffer'] = 100
 
 # training
 config['num_rounds'] = 100
-config['log_every'] = 5
+config['log_every'] = 1
 config['model_fp'] = 'rotation_cifar100_federated_supervised.h5'
 
 config['optimizer'] = 'SGD'
@@ -32,11 +32,13 @@ hparam_map['unsupervised_mask_ratio'] = hp.HParam('unsupervised_mask_ratio', hp.
 hparam_map['mask_by'] = hp.HParam('mask_by', hp.Discrete(['example']))
 hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['cifar100']))
 
-hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([128]))
-hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.02]))
+hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([32]))
+hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.002]))
 
-hparam_map['num_clients_per_round'] = hp.HParam('learning_rate', hp.Discrete([50]))
-hparam_map['num_epochs'] = hp.HParam('learning_rate', hp.Discrete([5]))
+hparam_map['num_clients_per_round'] = hp.HParam('num_clients_per_round', hp.Discrete([20]))
+hparam_map['num_epochs'] = hp.HParam('num_epochs', hp.Discrete([5]))
+hparam_map['server_optimizer'] = hp.HParam('server_optimizer', hp.Discrete(['Adam']))
+hparam_map['server_optimizer_learning_rate'] = hp.HParam('server_optimizer_learning_rate', hp.Discrete([0.0001]))
 
 ######### METRICS ###############################
 metric_map = {}

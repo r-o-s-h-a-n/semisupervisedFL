@@ -11,6 +11,7 @@ from models.model import Model
 
 from tensorflow.python.framework import dtypes
 from tensorflow.python.ops import random_ops
+import tensorflow_addons as tfa
 
 
 NCHANNELS1 = 192
@@ -122,12 +123,7 @@ def create_NIN_block(out_planes, kernel_size, name=None, trainable=True, channel
             trainable=trainable,
             data_format=data_format
             ),
-        tf.keras.layers.BatchNormalization(
-            axis=axis,
-            epsilon=1E-5,
-            momentum=0.1,
-            trainable=trainable,
-            ),
+        tfa.layers.InstanceNormalization(axis=-1),
         tf.keras.layers.ReLU()
     ], name=name)
     return  model
@@ -154,6 +150,21 @@ class GlobalAveragePooling(tf.keras.layers.Layer):
         return x
 
 
+def create_simple_feature_extractor_block(input_shape, trainable=True, channels_last=True):
+    model = tf.keras.models.Sequential([
+        tf.keras.layers.InputLayer(input_shape),
+        # block 1
+        tf.keras.layers.Conv2D(32,5),
+        tfa.layers.InstanceNormalization(axis=-1),
+        tf.keras.layers.ReLU(),
+
+        tf.keras.layers.Conv2D(64,5),
+        tfa.layers.InstanceNormalization(axis=-1),
+        tf.keras.layers.ReLU()
+    ], name='Conv_Feature_Extractor')
+
+    return model
+
 def create_feature_extractor_block(input_shape, trainable=True, channels_last=True):
     if channels_last:
         data_format = 'channels_last'
@@ -177,6 +188,21 @@ def create_feature_extractor_block(input_shape, trainable=True, channels_last=Tr
 
     return model
 
+def create_simple_label_classifier_block(num_classes=10, channels_last=True):
+    model = tf.keras.models.Sequential([
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(512, 
+                                name='Linear_Classifier', 
+                                activation='relu',
+                                ),
+        tf.keras.layers.Dense(num_classes, 
+                                name='Linear_Classifier', 
+                                activation='softmax',
+                                )
+    ],
+    name = 'Label_Classifier')
+    return model
+
 
 def create_conv_label_classifier_block(num_classes=10, channels_last=True):
     model = tf.keras.models.Sequential([
@@ -185,11 +211,12 @@ def create_conv_label_classifier_block(num_classes=10, channels_last=True):
         create_NIN_block(NCHANNELS1, 1, 'Block3_Conv2', channels_last=channels_last),
         create_NIN_block(NCHANNELS1, 1, 'Block3_Conv3', channels_last=channels_last),
 
-        GlobalAveragePooling(name='Global_Avg_Pool', channels_last=channels_last),
+        GlobalAveragePooling(name='Global_Avg_Pool'),
         tf.keras.layers.Dense(num_classes, 
                                 name='Linear_Classifier', 
                                 activation='softmax',
-                                kernel_initializer=DenseInitializer(num_classes))
+                                kernel_initializer=DenseInitializer(num_classes)
+                                )
     ],
     name = 'Label_Classifier')
     return model
@@ -365,6 +392,37 @@ class RotationSupervisedModel(Model):
 
         return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
             num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
+
+
+class SimpleRotationSupervisedModel(RotationSupervisedModel):
+    def __init__(self, ph):
+        RotationSupervisedModel.__init__(self, ph)
+    
+    def __call__(self):
+        '''
+        Returns a compiled keras model.
+        '''
+        feature_extractor = create_simple_feature_extractor_block(self.input_shape, 
+                                                        trainable=self.fine_tune_feature_extractor,
+                                                        channels_last=self.channels_last)
+
+        if self.pretrained_model_fp:
+            feature_extractor.load_weights(self.pretrained_model_fp, by_name=True)
+
+        model = tf.keras.models.Sequential([
+                feature_extractor,
+                create_simple_label_classifier_block(self.output_shape, channels_last=self.channels_last)
+            ])
+        model.compile(
+            loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+            optimizer=self.optimizer(learning_rate=self.learning_rate, 
+                                        nesterov=self.nesterov,
+                                        momentum=self.momentum, 
+                                        decay=self.decay),
+            metrics=[tf.keras.metrics.SparseCategoricalAccuracy()]
+            )
+        return model
+
 
 class RotationSelfSupervisedModel(Model):
     '''

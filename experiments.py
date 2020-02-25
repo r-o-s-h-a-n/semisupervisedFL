@@ -59,12 +59,17 @@ class SupervisedLearningFL(Algorithm):
                                                         sample_client_data = self.ph['sample_client_data'],
                                                         shuffle_buffer = self.ph['shuffle_buffer']
             )
+
             test_dataset = self.dataloader.preprocess_dataset(test_dataset)
             sample_batch = self.dataloader.get_sample_batch(train_client_data)
             model_fn = functools.partial(self.keras_model_fn.create_tff_model_fn, sample_batch)
 
             # federated training
-            iterative_process = tff.learning.build_federated_averaging_process(model_fn)
+            iterative_process = tff.learning.build_federated_averaging_process(model_fn
+                                    , server_optimizer_fn = lambda: getattr(tf.keras.optimizers, self.ph['server_optimizer'])(
+                                                                            self.ph['server_optimizer_learning_rate'])
+                                    )
+            )
             state = iterative_process.initialize()
 
             for round_num in range(self.num_rounds):

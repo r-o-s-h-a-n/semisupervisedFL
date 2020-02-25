@@ -69,7 +69,7 @@ class SupervisedLearningFL(Algorithm):
                                     , server_optimizer_fn = lambda: getattr(tf.keras.optimizers, self.ph['server_optimizer'])(
                                                                             self.ph['server_optimizer_learning_rate'])
                                     )
-            )
+
             state = iterative_process.initialize()
 
             for round_num in range(self.num_rounds):

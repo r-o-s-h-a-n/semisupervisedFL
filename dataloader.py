@@ -45,7 +45,7 @@ def get_client_data(dataset_name, mask_by, mask_ratios=None, sample_client_data=
     train_set = get_sample_client_data(train_set, 100, 100)
     test_set = get_sample_client_data(test_set, 100, 100)
 
-  if mask_ratios and if sum(mask_ratios.values()):
+  if mask_ratios and sum(mask_ratios.values()):
     for s in mask_ratios:
       if mask_by == 'example':
         train_set = mask_examples(train_set, mask_ratios[s], s, shuffle_buffer=shuffle_buffer)

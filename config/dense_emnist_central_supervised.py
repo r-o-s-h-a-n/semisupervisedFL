@@ -15,14 +15,17 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 100
 
 # training
-config['num_epochs'] = 10
-config['log_every'] = 1
+config['num_epochs'] = 20
+config['log_every'] = 5
 config['model_fp'] = 'dense_emnist_central_supervised.h5'
 
 config['optimizer'] = 'SGD'
 config['nesterov'] = True
-config['momentum'] = 0.9
+config['momentum'] = 0.99
 config['decay'] = 0.0
+
+# config['pretrained_model_fp'] = 'logs/dense_emnist_central_unsup/run_0/dense_emnist_central_unsup.h5'
+
 
 ######### EXPERIMENTAL PARAMETERS ###############
 hparam_map = {}
@@ -32,8 +35,8 @@ hparam_map['unsupervised_mask_ratio'] = hp.HParam('unsupervised_mask_ratio', hp.
 hparam_map['mask_by'] = hp.HParam('mask_by', hp.Discrete(['example']))
 hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['emnist']))
 
-hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([128]))
-hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.02]))
+hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([20]))
+hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.001]))
 
 ######### METRICS ###############################
 metric_map = {}

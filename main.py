@@ -8,6 +8,9 @@ import datetime
 import numpy as np
 import experiments as exp
 from pprint import pprint
+import warnings
+
+warnings.simplefilter('ignore')
 
 
 parser = argparse.ArgumentParser()

@@ -7,8 +7,10 @@ import six
 import tensorflow as tf
 import tensorflow_federated as tff
 import plots
-
+import warnings
 from tensorflow_federated.python.common_libs import py_typecheck
+
+warnings.simplefilter('ignore')
 
 
 def get_client_data(dataset_name, mask_by, mask_ratios=None, sample_client_data=False, shuffle_buffer=100):

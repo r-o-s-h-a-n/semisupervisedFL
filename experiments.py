@@ -9,6 +9,9 @@ import tensorflow_federated as tff
 import datetime
 from tensorboard.plugins.hparams import api as hp
 import plots
+import warnings
+
+warnings.simplefilter('ignore')
 
 
 class Algorithm(object):

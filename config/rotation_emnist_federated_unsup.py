@@ -15,7 +15,7 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 100
 
 # training
-config['num_rounds'] = 100
+config['num_rounds'] = 5
 config['log_every'] = 10
 config['model_fp'] = 'rotation_emnist_federated_unsup.h5'
 

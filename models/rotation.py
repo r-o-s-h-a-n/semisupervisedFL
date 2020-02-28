@@ -109,29 +109,37 @@ class DenseInitializer(tf.keras.initializers.Initializer):
             "dtype": self.dtype.name
         }
 
-# def create_NIN_block(out_planes, kernel_size, name=None, trainable=True, channels_last=True):
-#     if channels_last:
-#         data_format = 'channels_last'
-#         axis = -1
-#     else:
-#         data_format = 'channels_first'
-#         axis = 1
+def create_NIN_block(out_planes, kernel_size, name=None, input_shape=None):
+    if input_shape:
+        model = tf.keras.models.Sequential([
+            tf.keras.layers.Conv2D(
+                out_planes, 
+                kernel_size=kernel_size, 
+                strides=1, 
+                padding='same', 
+                input_shape=input_shape,
+                use_bias=False,
+                kernel_initializer=ConvInitializer(kernel_size, out_planes),
+                ),
+            tfa.layers.InstanceNormalization(axis=-1),
+            tf.keras.layers.ReLU()
+        ], name=name)
+        return  model
 
-#     model = tf.keras.models.Sequential([
-#         tf.keras.layers.Conv2D(
-#             out_planes, 
-#             kernel_size=kernel_size, 
-#             strides=1, 
-#             padding='same', 
-#             use_bias=False,
-#             kernel_initializer=ConvInitializer(kernel_size, out_planes),
-#             trainable=trainable,
-#             data_format=data_format
-#             ),
-#         tfa.layers.InstanceNormalization(axis=-1),
-#         tf.keras.layers.ReLU()
-#     ], name=name)
-#     return  model
+    else:
+        model = tf.keras.models.Sequential([
+            tf.keras.layers.Conv2D(
+                out_planes, 
+                kernel_size=kernel_size, 
+                strides=1, 
+                padding='same', 
+                use_bias=False,
+                kernel_initializer=ConvInitializer(kernel_size, out_planes),
+                ),
+            tfa.layers.InstanceNormalization(axis=-1),
+            tf.keras.layers.ReLU()
+        ], name=name)
+        return  model
 
 
 # class GlobalAveragePooling(tf.keras.layers.Layer):
@@ -221,21 +229,22 @@ class DenseInitializer(tf.keras.initializers.Initializer):
 def create_simple_feature_extractor_block(input_shape, trainable=True, channels_last=True):
     model = tf.keras.models.Sequential([
         # block 1
-        tf.keras.layers.Conv2D(NCHANNELS1, 5, padding='same', name='sam', input_shape=input_shape),
-        tfa.layers.InstanceNormalization(axis=-1),
-        tf.keras.layers.ReLU()
+        create_NIN_block(NCHANNELS1, 5, name='Block1_Conv1'),
+        create_NIN_block(NCHANNELS2, 1, name='Block1_Conv2'),
+        create_NIN_block(NCHANNELS2, 1, name='Block1_Conv3')
     ], name='Conv_Feature_Extractor')
 
     return model
 
 
 def create_simple_label_classifier_block(input_shape, num_classes=10, channels_last=True):
-    input_shape = input_shape[:2] + [NCHANNELS1]
+    input_shape = input_shape[:2] + [NCHANNELS2]
     
     model = tf.keras.models.Sequential([
-        tf.keras.layers.Conv2D(NCHANNELS2, 5, name='frodo', input_shape=input_shape),
-        tfa.layers.InstanceNormalization(axis=-1),
-        tf.keras.layers.ReLU(),
+        # block 2
+        create_NIN_block(NCHANNELS1, 5, name='Block2_Conv1', input_shape=input_shape),
+        create_NIN_block(NCHANNELS2, 1, name='Block2_Conv2'),
+        create_NIN_block(NCHANNELS2, 1, name='Block2_Conv3'),
 
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(512, 
@@ -252,13 +261,13 @@ def create_simple_label_classifier_block(input_shape, num_classes=10, channels_l
 
 
 def create_simple_rotation_classifier_block(input_shape, num_classes=4, channels_last=True):
-    input_shape = input_shape[:2] + [NCHANNELS1]
+    input_shape = input_shape[:2] + [NCHANNELS2]
 
     model = tf.keras.models.Sequential([
-
-        tf.keras.layers.Conv2D(NCHANNELS2, 5, input_shape=input_shape),
-        tfa.layers.InstanceNormalization(axis=-1),
-        tf.keras.layers.ReLU(),
+        # block 2
+        create_NIN_block(NCHANNELS1, 5, name='Block2_Conv1', input_shape=input_shape),
+        create_NIN_block(NCHANNELS2, 1, name='Block2_Conv2'),
+        create_NIN_block(NCHANNELS2, 1, name='Block2_Conv3'),
 
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(512, 

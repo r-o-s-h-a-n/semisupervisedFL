@@ -7,7 +7,7 @@ from parameter_handler import ParameterHandler
 config = {}
 
 config['experiment'] = 'SupervisedLearningFL'
-config['model_fn'] = 'RotationSelfSupervisedModel'
+config['model_fn'] = 'RotationSupervisedModel'
 config['sample_client_data'] = False      # must set to False when running real experiments
 config['curr_run_number'] = 0                  # always initialize as 0, unless starting from a certain run
 
@@ -15,7 +15,7 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 100
 
 # training
-config['num_rounds'] = 5
+config['num_rounds'] = 15
 config['log_every'] = 10
 config['model_fp'] = 'rotation_emnist_federated_unsup.h5'
 
@@ -30,7 +30,7 @@ hparam_map = {}
 hparam_map['supervised_mask_ratio'] = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0]))
 hparam_map['unsupervised_mask_ratio'] = hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0]))
 hparam_map['mask_by'] = hp.HParam('mask_by', hp.Discrete(['example']))
-hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['emnist']))
+hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['cifar100']))
 
 hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([20]))
 hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.0001]))

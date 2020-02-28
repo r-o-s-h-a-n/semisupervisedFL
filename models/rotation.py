@@ -109,14 +109,14 @@ class DenseInitializer(tf.keras.initializers.Initializer):
             "dtype": self.dtype.name
         }
 
-def create_NIN_block(out_planes, kernel_size, name=None, input_shape=None):
+def create_NIN_block(out_planes, kernel_size, strides=1, padding='same', name=None, input_shape=None):
     if input_shape:
         model = tf.keras.models.Sequential([
             tf.keras.layers.Conv2D(
                 out_planes, 
                 kernel_size=kernel_size, 
-                strides=1, 
-                padding='same', 
+                strides=strides, 
+                padding=padding, 
                 input_shape=input_shape,
                 use_bias=False,
                 kernel_initializer=ConvInitializer(kernel_size, out_planes),
@@ -142,25 +142,25 @@ def create_NIN_block(out_planes, kernel_size, name=None, input_shape=None):
         return  model
 
 
-# class GlobalAveragePooling(tf.keras.layers.Layer):
-#     def __init__(self, name, channels_last=True):
-#         super(GlobalAveragePooling, self).__init__(name=name)
-#         self.channels_last = channels_last
+class GlobalAveragePooling(tf.keras.layers.Layer):
+    def __init__(self, name, channels_last=True):
+        super(GlobalAveragePooling, self).__init__(name=name)
+        self.channels_last = channels_last
     
-#     def build(self, input_shape):
-#         if self.channels_last:
-#             self.avgpool = tf.keras.layers.AveragePooling2D(
-#                                             pool_size=(input_shape[1], input_shape[2]), padding='valid')
-#             self.reshape = tf.keras.layers.Reshape((-1, input_shape[-1]))
-#         else:
-#             self.avgpool = tf.keras.layers.AveragePooling2D(
-#                                             pool_size=(input_shape[2], input_shape[3]), padding='valid')
-#             self.reshape = tf.keras.layers.Reshape((-1, input_shape[1]))
+    def build(self, input_shape):
+        if self.channels_last:
+            self.avgpool = tf.keras.layers.AveragePooling2D(
+                                            pool_size=(input_shape[1], input_shape[2]), padding='valid')
+            self.reshape = tf.keras.layers.Reshape((-1, input_shape[-1]))
+        else:
+            self.avgpool = tf.keras.layers.AveragePooling2D(
+                                            pool_size=(input_shape[2], input_shape[3]), padding='valid')
+            self.reshape = tf.keras.layers.Reshape((-1, input_shape[1]))
 
-#     def call(self, input):
-#         x = self.avgpool(input)
-#         x = self.reshape(x)
-#         return x
+    def call(self, input):
+        x = self.avgpool(input)
+        x = self.reshape(x)
+        return x
 
 
 # def create_feature_extractor_block(input_shape, trainable=True, channels_last=True):
@@ -229,9 +229,12 @@ def create_NIN_block(out_planes, kernel_size, name=None, input_shape=None):
 def create_simple_feature_extractor_block(input_shape, trainable=True, channels_last=True):
     model = tf.keras.models.Sequential([
         # block 1
-        create_NIN_block(NCHANNELS1, 5, name='Block1_Conv1'),
+        create_NIN_block(NCHANNELS1, 3, name='Block1_Conv1', input_shape=input_shape),
         create_NIN_block(NCHANNELS2, 1, name='Block1_Conv2'),
-        create_NIN_block(NCHANNELS2, 1, name='Block1_Conv3')
+        create_NIN_block(NCHANNELS2, 1, name='Block1_Conv3'),
+
+        tf.keras.layers.MaxPooling2D(3, strides=2, padding='valid', name='maxpool')
+
     ], name='Conv_Feature_Extractor')
 
     return model
@@ -242,18 +245,35 @@ def create_simple_label_classifier_block(input_shape, num_classes=10, channels_l
     
     model = tf.keras.models.Sequential([
         # block 2
-        create_NIN_block(NCHANNELS1, 5, name='Block2_Conv1', input_shape=input_shape),
+        # create_NIN_block(NCHANNELS2, 3, name='Block2_Conv1', input_shape=input_shape),
+        create_NIN_block(NCHANNELS2, 3, name='Block2_Conv1', input_shape=input_shape),
         create_NIN_block(NCHANNELS2, 1, name='Block2_Conv2'),
         create_NIN_block(NCHANNELS2, 1, name='Block2_Conv3'),
+
+        tf.keras.layers.AveragePooling2D(3, strides=2, padding='valid', name='avgpool'),
+
+        create_NIN_block(NCHANNELS2, 3, name='Block3_Conv1'),
+        create_NIN_block(NCHANNELS2, 1, name='Block3_Conv2'),
+        create_NIN_block(NCHANNELS2, 1, name='Block3_Conv3'),
+
+        # create_NIN_block(NCHANNELS2, 3, name='Block4_Conv1'),
+        # # create_NIN_block(NCHANNELS2, 1, name='Block3_Conv2'),
+        # create_NIN_block(NCHANNELS2, 1, name='Block4_Conv3'),
+
+        # GlobalAveragePooling(name='gap'),
+        
+        tf.keras.layers.MaxPooling2D(3, strides=2, padding='valid', name='maxpool'),
+        # tf.keras.layers.AveragePooling2D(3, strides=2, padding='valid', name='avgpool'),
 
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(512, 
                                 name='Hidden_Layer', 
-                                activation='relu',
+                                activation='relu'
                                 ),
+
         tf.keras.layers.Dense(num_classes, 
                                 name='Linear_Classifier', 
-                                activation='softmax',
+                                activation='softmax'
                                 )
     ],
     name = 'Label_Classifier')
@@ -506,7 +526,7 @@ class RotationSelfSupervisedModel(Model):
             img = tf.cast(element['image'], tf.float32)
             img = tf.math.subtract(img, tf.convert_to_tensor([255*0.49139968, 255*0.48215841, 255*0.44653091], dtype=tf.float32))
             img = tf.math.divide(img, tf.convert_to_tensor([255*0.24703223, 255*0.24348513, 255*0.26158784], dtype=tf.float32))
-            # img = tf.transpose(img, [2, 0, 1]) # convert NHWC to NCHW
+            img = tf.transpose(img, [2, 0, 1]) # convert NHWC to NCHW
 
             rotated_elements = (
                 tf.data.Dataset.from_tensor_slices([rotate_img_tensor(img, rot, channels_last=False) for rot in [0, 90, 180, 270]]),

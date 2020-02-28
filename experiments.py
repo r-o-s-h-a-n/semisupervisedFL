@@ -67,7 +67,9 @@ class SupervisedLearningFL(Algorithm):
             model_fn = functools.partial(self.keras_model_fn.create_tff_model_fn, sample_batch)
 
             # federated training
-            iterative_process = tff.learning.build_federated_averaging_process(model_fn)
+            iterative_process = tff.learning.build_federated_averaging_process(model_fn
+                                            # , server_optimizer_fn = lambda: tf.keras.optimizers.Adam()
+            )
             state = iterative_process.initialize()
 
             for round_num in range(self.num_rounds):

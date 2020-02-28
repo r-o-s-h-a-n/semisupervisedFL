@@ -16,18 +16,20 @@ config['shuffle_buffer'] = 100
 
 # training
 config['num_rounds'] = 100
-config['log_every'] = 5
-config['model_fp'] = 'rotation_cifar100_federated_supervised.h5'
+config['log_every'] = 10
+config['model_fp'] = 'rotation_emnist_federated_supervised.h5'
 
 config['optimizer'] = 'SGD'
 config['nesterov'] = True
 config['momentum'] = 0.9
 config['decay'] = 0.0
 
+# config['pretrained_model_fp'] = 'logs/rotation_emnist_federated_unsup/run_0/rotation_emnist_federated_unsup.h5'
+
 ######### EXPERIMENTAL PARAMETERS ###############
 hparam_map = {}
 
-hparam_map['supervised_mask_ratio'] = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0, 0.8, 0.9, 0.95, 0.99]))
+hparam_map['supervised_mask_ratio'] = hp.HParam('supervised_mask_ratio', hp.Discrete([0.99]))
 hparam_map['unsupervised_mask_ratio'] = hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0]))
 hparam_map['mask_by'] = hp.HParam('mask_by', hp.Discrete(['example']))
 hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['emnist']))
@@ -35,8 +37,8 @@ hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['emnist']))
 hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([20]))
 hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.0001]))
 
-hparam_map['num_clients_per_round'] = hp.HParam('learning_rate', hp.Discrete([100]))
-hparam_map['num_epochs'] = hp.HParam('learning_rate', hp.Discrete([10]))
+hparam_map['num_clients_per_round'] = hp.HParam('num_clients_per_round', hp.Discrete([20]))
+hparam_map['num_epochs'] = hp.HParam('num_epochs', hp.Discrete([5]))
 
 ######### METRICS ###############################
 metric_map = {}

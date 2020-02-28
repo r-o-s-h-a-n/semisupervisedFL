@@ -45,6 +45,9 @@ class DenseSupervisedModel(Model):
         self.output_size = OUTPUT_SIZE[self.ph['dataset']]
         self.pretrained_model_fp = self.ph.setdefault('pretrained_model_fp', None)
 
+        if self.pretrained_model_fp:
+            print('training on pretrained model')
+
     def __call__(self):
         '''
         Returns a compiled keras model.

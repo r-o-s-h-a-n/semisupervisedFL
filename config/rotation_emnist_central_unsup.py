@@ -15,7 +15,7 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 100
 
 # training
-config['num_epochs'] = 1 #50
+config['num_epochs'] = 50
 config['log_every'] = 5
 config['model_fp'] = 'rotation_emnist_central_unsup.h5'
 
@@ -32,7 +32,7 @@ hparam_map['unsupervised_mask_ratio'] = hp.HParam('unsupervised_mask_ratio', hp.
 hparam_map['mask_by'] = hp.HParam('mask_by', hp.Discrete(['example']))
 hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['emnist']))
 
-hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([512]))
+hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([20]))
 hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.0001]))
 
 ######### METRICS ###############################

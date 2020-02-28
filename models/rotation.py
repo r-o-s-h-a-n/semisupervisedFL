@@ -14,14 +14,19 @@ from tensorflow.python.ops import random_ops
 import tensorflow_addons as tfa
 
 
-NCHANNELS1 = 192
-NCHANNELS2 = 160
-NCHANNELS3 = 96
+# NCHANNELS1 = 192
+# NCHANNELS2 = 160
+# NCHANNELS3 = 96
+
+
+NCHANNELS1 = 32
+NCHANNELS2 = 64
+
 
 CHANNELS_LAST = True
 
-INPUT_SHAPES_CHANNELS_FIRST = {'emnist': (1,28,28), 'cifar100': (3,32,32), 'cifar10central': (3,32,32)}
-INPUT_SHAPES_CHANNELS_LAST = {'emnist': (28,28,1), 'cifar100': (32,32,3), 'cifar10central': (32,32,3)}
+INPUT_SHAPES_CHANNELS_FIRST = {'emnist': [1,28,28], 'cifar100': [3,32,32], 'cifar10central': [3,32,32]}
+INPUT_SHAPES_CHANNELS_LAST = {'emnist': [28,28,1], 'cifar100': [32,32,3], 'cifar10central': [32,32,3]}
 OUTPUT_SHAPES = {'emnist': 10, 'cifar100': 20, 'cifar10central': 10}
 
 
@@ -215,9 +220,8 @@ class DenseInitializer(tf.keras.initializers.Initializer):
 
 def create_simple_feature_extractor_block(input_shape, trainable=True, channels_last=True):
     model = tf.keras.models.Sequential([
-        tf.keras.layers.InputLayer(input_shape),
         # block 1
-        tf.keras.layers.Conv2D(32,5),
+        tf.keras.layers.Conv2D(NCHANNELS1, 5, padding='same', name='sam', input_shape=input_shape),
         tfa.layers.InstanceNormalization(axis=-1),
         tf.keras.layers.ReLU()
     ], name='Conv_Feature_Extractor')
@@ -225,15 +229,17 @@ def create_simple_feature_extractor_block(input_shape, trainable=True, channels_
     return model
 
 
-def create_simple_label_classifier_block(num_classes=10, channels_last=True):
+def create_simple_label_classifier_block(input_shape, num_classes=10, channels_last=True):
+    input_shape = input_shape[:2] + [NCHANNELS1]
+    
     model = tf.keras.models.Sequential([
-        tf.keras.layers.Conv2D(64,5),
+        tf.keras.layers.Conv2D(NCHANNELS2, 5, name='frodo', input_shape=input_shape),
         tfa.layers.InstanceNormalization(axis=-1),
         tf.keras.layers.ReLU(),
 
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(512, 
-                                name='Linear_Classifier', 
+                                name='Hidden_Layer', 
                                 activation='relu',
                                 ),
         tf.keras.layers.Dense(num_classes, 
@@ -245,15 +251,18 @@ def create_simple_label_classifier_block(num_classes=10, channels_last=True):
     return model
 
 
-def create_simple_rotation_classifier_block(num_classes=4, channels_last=True):
+def create_simple_rotation_classifier_block(input_shape, num_classes=4, channels_last=True):
+    input_shape = input_shape[:2] + [NCHANNELS1]
+
     model = tf.keras.models.Sequential([
-        tf.keras.layers.Conv2D(64,5),
+
+        tf.keras.layers.Conv2D(NCHANNELS2, 5, input_shape=input_shape),
         tfa.layers.InstanceNormalization(axis=-1),
         tf.keras.layers.ReLU(),
 
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(512, 
-                                name='Linear_Classifier', 
+                                name='Hidden_Layer', 
                                 activation='relu',
                                 ),
         tf.keras.layers.Dense(num_classes, 
@@ -320,7 +329,7 @@ class RotationSupervisedModel(Model):
         self.fine_tune_feature_extractor = self.ph.setdefault('fine_tune_feature_extractor', True)
 
         if self.pretrained_model_fp:
-            tf.print('training on transfered pretrained model')
+            tf.print('training on a pretrained model')
 
     def __call__(self):
         '''
@@ -335,7 +344,7 @@ class RotationSupervisedModel(Model):
 
         model = tf.keras.models.Sequential([
                 feature_extractor,
-                create_simple_label_classifier_block(self.output_shape, channels_last=self.channels_last)
+                create_simple_label_classifier_block(self.input_shape, self.output_shape, channels_last=self.channels_last)
             ])
         model.compile(
             loss=tf.keras.losses.SparseCategoricalCrossentropy(),
@@ -438,7 +447,7 @@ class RotationSelfSupervisedModel(Model):
         '''
         model = tf.keras.models.Sequential([
             create_simple_feature_extractor_block(self.input_shape, trainable=True, channels_last=CHANNELS_LAST),
-            create_simple_rotation_classifier_block(num_classes=4, channels_last=CHANNELS_LAST)
+            create_simple_rotation_classifier_block(self.input_shape, num_classes=4, channels_last=CHANNELS_LAST)
         ])
 
         model.compile(

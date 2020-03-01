@@ -256,6 +256,7 @@ def rotate_img_tensor(img, rot, channels_last=True):
     if not channels_last:
         return tf.transpose(res, [2, 0, 1])
 
+    return res
 
 class RotationSupervisedModel(Model):
     def __init__(self, ph):

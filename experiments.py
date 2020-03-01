@@ -88,6 +88,9 @@ class SupervisedLearningFL(Algorithm):
                     tf.summary.scalar('test_accuracy', test_accuracy, step=round_num)
                     tf.summary.scalar('test_loss', test_loss, step=round_num)
 
+                    model_fp = os.path.join(run_dir, self.ph['model_fp'].format('round_'+str(round_num)))
+                    self.keras_model_fn.save_model_weights(model_fp, state)
+
             print('\nround {:2d}, metrics={}'.format(round_num, metrics))
             tf.summary.scalar('train_accuracy', metrics[0], step=round_num)
             tf.summary.scalar('train_loss', metrics[1], step=round_num)
@@ -96,8 +99,8 @@ class SupervisedLearningFL(Algorithm):
             tf.summary.scalar('test_accuracy', test_accuracy, step=round_num)
             tf.summary.scalar('test_loss', test_loss, step=round_num)
 
-        model_fp = os.path.join(run_dir, self.ph['model_fp'])
-        self.keras_model_fn.save_model_weights(model_fp, state)
+            model_fp = os.path.join(run_dir, self.ph['model_fp'].format('final_model'))
+            self.keras_model_fn.save_model_weights(model_fp, state)
         return
 
     def evaluate_central(self, dataset, state):
@@ -192,6 +195,9 @@ class SupervisedLearningCentral(Algorithm):
                     print('\nepoch {:2d}, train accuracy={} train loss={} test accuracy={} test loss={}'.format(
                                 epoch, train_accuracy, train_loss, test_accuracy, test_loss))
 
+                    model_fp = os.path.join(run_dir, self.ph['model_fp'].format('epoch_'+str(epoch)))
+                    model.save_weights(model_fp)
+
             train_loss, train_accuracy = model.evaluate(train_dataset)
             tf.summary.scalar('train_accuracy', train_accuracy, step=epoch)
             tf.summary.scalar('train_loss', train_loss, step=epoch)
@@ -202,6 +208,6 @@ class SupervisedLearningCentral(Algorithm):
             print('\n\n\nepoch {:2d}, train accuracy={} train loss={} test accuracy={} test loss={}'.format(
                                 epoch, train_accuracy, train_loss, test_accuracy, test_loss))
 
-        model_fp = os.path.join(run_dir, self.ph['model_fp'])
-        model.save_weights(model_fp)
+            model_fp = os.path.join(run_dir, self.ph['model_fp'].format('final_model'))
+            model.save_weights(model_fp)
         return

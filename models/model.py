@@ -18,9 +18,9 @@ class Model(object):
         self.ph=ph
         self.optimizer = getattr(tf.keras.optimizers, ph['optimizer'])
         self.learning_rate = ph['learning_rate']
-        self.nesterov = ph.setdefault('nesterov', None)
-        self.momentum = ph.setdefault('momentum', None)
-        self.decay = ph.setdefault('decay', None)
+        self.nesterov = ph.setdefault('nesterov', False)
+        self.momentum = ph.setdefault('momentum', 0.0)
+        self.decay = ph.setdefault('decay', 0.0)
 
     def __call__(self):
         raise NotImplementedError('must define a class for your model that inherits \

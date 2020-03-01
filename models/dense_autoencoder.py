@@ -9,7 +9,7 @@ import tensorflow_federated as tff
 from models.model import Model
 
 
-ENCODER_SIZE = 10
+ENCODER_SIZE = 256
 INPUT_SIZE = {'emnist': 784, 'cifar100': 3072, 'cifar10central': 3072}
 OUTPUT_SIZE = {'emnist': 10, 'cifar100': 20, 'cifar10central': 10}
 

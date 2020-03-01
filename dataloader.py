@@ -7,7 +7,6 @@ import six
 import tensorflow as tf
 import tensorflow_federated as tff
 import plots
-import warnings
 from tensorflow_federated.python.common_libs import py_typecheck
 
 warnings.simplefilter('ignore')
@@ -175,14 +174,19 @@ class DataLoader(object):
         self.batch_size = batch_size
         self.learning_env = learning_env
       
-    def preprocess_dataset(self, dataset):
+    def preprocess_dataset(self, dataset, test=False):
         '''
         Preprocesses a single tf Dataset.
         '''
+        if test:
+          batch_size=512
+        else:
+          batch_size=self.batch_size
+
         return self.preprocess_fn(dataset,
                                   self.num_epochs,
                                   self.shuffle_buffer,
-                                  self.batch_size,
+                                  batch_size,
                                   self.learning_env
                                   )
 

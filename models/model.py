@@ -32,7 +32,7 @@ class Model(object):
         keras_model = self()
         return tff.learning.from_compiled_keras_model(keras_model, sample_batch)
 
-    def save_model_weights(self, model_fp, federated_state):
+    def save_model_weights(self, model_fp, federated_state, sample_batch):
         '''
         Saves model weights to file from tff iteration state.
 
@@ -45,6 +45,7 @@ class Model(object):
             nothing, but saves model weights
         '''
         keras_model = self()
+        keras_model.build(sample_batch)
         tff.learning.assign_weights_to_keras_model(keras_model, federated_state.model)
         keras_model.save_weights(model_fp)
         return

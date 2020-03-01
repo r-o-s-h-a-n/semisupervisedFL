@@ -62,7 +62,7 @@ class SupervisedLearningFL(Algorithm):
                                                         sample_client_data = self.ph['sample_client_data'],
                                                         shuffle_buffer = self.ph['shuffle_buffer']
             )
-            test_dataset = self.dataloader.preprocess_dataset(test_dataset)
+            test_dataset = self.dataloader.preprocess_dataset(test_dataset, test=True)
             sample_batch = self.dataloader.get_sample_batch(train_client_data)
             model_fn = functools.partial(self.keras_model_fn.create_tff_model_fn, sample_batch)
 
@@ -78,7 +78,7 @@ class SupervisedLearningFL(Algorithm):
                                                 )
                 federated_train_data = self.dataloader.make_federated_data(train_client_data, sample_clients)
                 state, metrics = iterative_process.next(state, federated_train_data)
-                print('\nround {:2d}, metrics={}'.format(round_num, metrics))
+                print('\nround {:2d}, train metrics={}\n'.format(round_num, metrics))
                 
                 if not round_num % self.log_every:
                     tf.summary.scalar('train_accuracy', metrics[0], step=round_num)
@@ -87,11 +87,12 @@ class SupervisedLearningFL(Algorithm):
                     test_loss, test_accuracy = self.evaluate_central(test_dataset, state)
                     tf.summary.scalar('test_accuracy', test_accuracy, step=round_num)
                     tf.summary.scalar('test_loss', test_loss, step=round_num)
+                    print('\n\n\nround {:2d}, test accuracy={}, test loss={}\n\n'.format(round_num, test_accuracy, test_loss))
 
                     model_fp = os.path.join(run_dir, self.ph['model_fp'].format('round_'+str(round_num)))
-                    self.keras_model_fn.save_model_weights(model_fp, state)
+                    self.keras_model_fn.save_model_weights(model_fp, state, sample_batch)
 
-            print('\nround {:2d}, metrics={}'.format(round_num, metrics))
+            print('\n\n\nround {:2d}, metrics={}'.format(round_num, metrics))
             tf.summary.scalar('train_accuracy', metrics[0], step=round_num)
             tf.summary.scalar('train_loss', metrics[1], step=round_num)
 
@@ -100,7 +101,7 @@ class SupervisedLearningFL(Algorithm):
             tf.summary.scalar('test_loss', test_loss, step=round_num)
 
             model_fp = os.path.join(run_dir, self.ph['model_fp'].format('final_model'))
-            self.keras_model_fn.save_model_weights(model_fp, state)
+            self.keras_model_fn.save_model_weights(model_fp, state, sample_batch)
         return
 
     def evaluate_central(self, dataset, state):
@@ -176,7 +177,7 @@ class SupervisedLearningCentral(Algorithm):
 
             train_dataset = train_client_data.create_tf_dataset_from_all_clients()
             train_dataset = self.dataloader.preprocess_dataset(train_dataset)
-            test_dataset = self.dataloader.preprocess_dataset(test_dataset)
+            test_dataset = self.dataloader.preprocess_dataset(test_dataset, test=True)
 
             # centralized training
             model = self.keras_model_fn()
@@ -192,7 +193,7 @@ class SupervisedLearningCentral(Algorithm):
                     test_loss, test_accuracy = model.evaluate(test_dataset)
                     tf.summary.scalar('test_accuracy', test_accuracy, step=epoch)
                     tf.summary.scalar('test_loss', test_loss, step=epoch)
-                    print('\nepoch {:2d}, train accuracy={} train loss={} test accuracy={} test loss={}'.format(
+                    print('\n\n\nepoch {:2d}, train accuracy={} train loss={} test accuracy={} test loss={}\n\n'.format(
                                 epoch, train_accuracy, train_loss, test_accuracy, test_loss))
 
                     model_fp = os.path.join(run_dir, self.ph['model_fp'].format('epoch_'+str(epoch)))
@@ -205,7 +206,7 @@ class SupervisedLearningCentral(Algorithm):
             test_loss, test_accuracy = model.evaluate(test_dataset)
             tf.summary.scalar('test_accuracy', test_accuracy, step=epoch)
             tf.summary.scalar('test_loss', test_loss, step=epoch)
-            print('\n\n\nepoch {:2d}, train accuracy={} train loss={} test accuracy={} test loss={}'.format(
+            print('\n\n\nepoch {:2d}, train accuracy={} train loss={} test accuracy={} test loss={}\n\n'.format(
                                 epoch, train_accuracy, train_loss, test_accuracy, test_loss))
 
             model_fp = os.path.join(run_dir, self.ph['model_fp'].format('final_model'))

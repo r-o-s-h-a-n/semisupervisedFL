@@ -1,6 +1,9 @@
 import unittest
 import dataloader as dta
 import tensorflow as tf
+import warnings
+
+warnings.simplefilter('ignore')
 
 
 class TestDataLoader(unittest.TestCase):

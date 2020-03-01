@@ -18,7 +18,7 @@ def create_encoder_keras_model(input_size):
     model = tf.keras.models.Sequential([
         tf.keras.layers.Dense(
             ENCODER_SIZE, activation=tf.nn.relu, input_shape=(input_size,), name='encoder1')
-    ])
+    ], name='encoder')
     return  model
 
 
@@ -26,7 +26,7 @@ def create_decoder_keras_model(output_size):
     model = tf.keras.models.Sequential([
         tf.keras.layers.Dense(
           output_size, activation=tf.nn.sigmoid, input_shape=(ENCODER_SIZE,), name='decoder1')
-        ])
+        ], name='decoder')
     return  model
 
 
@@ -34,7 +34,7 @@ def create_classifier_keras_model(output_size):
     model = tf.keras.models.Sequential([
         tf.keras.layers.Dense(
         output_size, activation=tf.nn.softmax, input_shape=(ENCODER_SIZE,), name='classifier1')
-        ])
+        ], name='classifier')
     return model
 
 
@@ -45,15 +45,15 @@ class DenseSupervisedModel(Model):
         self.output_size = OUTPUT_SIZE[self.ph['dataset']]
         self.pretrained_model_fp = self.ph.setdefault('pretrained_model_fp', None)
 
+        if self.pretrained_model_fp:
+            print('training on pretrained model')
+
     def __call__(self):
         '''
         Returns a compiled keras model.
         '''
         encoder_model = create_encoder_keras_model(self.input_size)
-    
-        if self.pretrained_model_fp:
-            encoder_model.load_weights(self.pretrained_model_fp, by_name=True)
-            
+
         model = tf.keras.models.Sequential([
             encoder_model,
             create_classifier_keras_model(self.output_size)
@@ -66,6 +66,10 @@ class DenseSupervisedModel(Model):
                                         momentum=self.momentum, 
                                         decay=self.decay),
             metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
+        
+        if self.pretrained_model_fp:
+            model.load_weights(self.pretrained_model_fp, by_name=True)
+
         return model
 
     def preprocess_emnist(self,

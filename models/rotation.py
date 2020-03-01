@@ -269,6 +269,9 @@ class RotationSupervisedModel(Model):
         self.pretrained_model_fp = self.ph.setdefault('pretrained_model_fp', None)
         self.fine_tune_feature_extractor = self.ph.setdefault('fine_tune_feature_extractor', True)
 
+        if self.pretrained_model_fp:
+            print('training on pretrained model')
+
     def __call__(self):
         '''
         Returns a compiled keras model.
@@ -276,9 +279,6 @@ class RotationSupervisedModel(Model):
         feature_extractor = create_feature_extractor_block(self.input_shape, 
                                                         trainable=self.fine_tune_feature_extractor,
                                                         channels_last=self.channels_last)
-
-        if self.pretrained_model_fp:
-            feature_extractor.load_weights(self.pretrained_model_fp, by_name=True)
 
         model = tf.keras.models.Sequential([
                 feature_extractor,
@@ -292,6 +292,10 @@ class RotationSupervisedModel(Model):
                                         decay=self.decay),
             metrics=[tf.keras.metrics.SparseCategoricalAccuracy()]
             )
+
+        if self.pretrained_model_fp:
+            model.load_weights(self.pretrained_model_fp, by_name=True)
+
         return model
 
     def preprocess_emnist(self,

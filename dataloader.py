@@ -94,7 +94,7 @@ def mask_false(example, mask_type):
     return example
 
 
-def mask_examples(client_data, mask_ratio, mask_type, shuffle_buffer, seed=None):
+def mask_examples(client_data, mask_ratio, mask_type, shuffle_buffer=500, seed=None):
     '''
     Masks mask_ratio fraction of randomly selected examples on each client.
 
@@ -128,7 +128,7 @@ def mask_examples(client_data, mask_ratio, mask_type, shuffle_buffer, seed=None)
     return tff.simulation.client_data.ConcreteClientData(client_data.client_ids, get_dataset)
 
 
-def mask_clients(client_data, mask_ratio, mask_type, shuffle_buffer, seed=None):
+def mask_clients(client_data, mask_ratio, mask_type, shuffle_buffer=500, seed=None):
     '''
     Masks mask_ratio fraction of clients uniformly randomly. If a client is 
     selected as masked, all examples it contains are treated as masked.

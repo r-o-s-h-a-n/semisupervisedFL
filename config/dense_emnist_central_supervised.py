@@ -15,7 +15,7 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 500
 
 # training
-config['num_epochs'] = 4
+config['num_epochs'] = 10
 config['log_every'] = 1
 config['model_fp'] = 'dense_emnist_central_supervised_{}.h5'
 

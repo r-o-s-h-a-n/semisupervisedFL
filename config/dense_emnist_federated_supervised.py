@@ -15,7 +15,7 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 500
 
 # training
-config['num_rounds'] = 100
+config['num_rounds'] = 1
 config['log_every'] = 10
 config['model_fp'] = 'dense_emnist_federated_supervised_{}.h5'
 
@@ -23,6 +23,8 @@ config['optimizer'] = 'SGD'
 config['nesterov'] = False
 config['momentum'] = 0.99
 config['decay'] = 0.0
+
+config['pretrained_model_fp'] = 'logs/dense_emnist_federated_unsup/run_0/dense_emnist_federated_unsup_final_model.h5'
 
 ######### EXPERIMENTAL PARAMETERS ###############
 hparam_map = {}

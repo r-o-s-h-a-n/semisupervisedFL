@@ -15,7 +15,7 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 500
 
 # training
-config['num_epochs'] = 40
+config['num_epochs'] = 1
 config['log_every'] = 5
 config['model_fp'] = 'rotation_cifar10_central_supervised_{}.h5'
 

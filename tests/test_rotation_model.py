@@ -4,7 +4,6 @@ import numpy as np
 import functools
 import unittest
 import warnings
-import pickle
 import csv
 import tensorflow as tf
 import tensorflow_federated as tff
@@ -16,13 +15,14 @@ warnings.simplefilter('ignore')
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
+
 class TestRotationModel(unittest.TestCase):
     def setUp(self):
         ph = {'optimizer': 'SGD', 
                 'learning_rate': 10.0,
-                'dataset': 'emnist'}
+                'dataset': 'cifar100'}
 
-        keras_model_fn = mdl.RotationSelfSupervisedModel(ph)
+        keras_model_fn = mdl.SimpleRotationSelfSupervisedModel(ph)
         preprocess_fn = getattr(keras_model_fn, 'preprocess_{}'.format(ph['dataset']))
 
         dataloader = dta.DataLoader(
@@ -37,7 +37,7 @@ class TestRotationModel(unittest.TestCase):
                                                     'example', 
                                                     {'supervised':0.0, 
                                                     'unsupervised':0.0},
-                                                    sample_client_data = True)
+                                                    sample_client_data = False)
         
         sample_batch = dataloader.get_sample_batch(train_client_data)
         model_fn = functools.partial(keras_model_fn.create_tff_model_fn, sample_batch)
@@ -51,6 +51,7 @@ class TestRotationModel(unittest.TestCase):
         state, _ = iterative_process.next(state, federated_train_data)
 
         self.old_model = keras_model_fn()
+        self.old_model.build(sample_batch)
         tff.learning.assign_weights_to_keras_model(self.old_model, state.model)
 
         self.tmp_dir = 'tests/tmp/'
@@ -64,10 +65,10 @@ class TestRotationModel(unittest.TestCase):
 
         ph = {'optimizer': 'SGD', 
                 'learning_rate': 10.0,
-                'dataset': 'emnist',
+                'dataset': 'cifar100',
                 'pretrained_model_fp': self.model_fp}
 
-        self.transfer_model = mdl.RotationSupervisedModel(ph)()
+        self.transfer_model = mdl.SimpleRotationSupervisedModel(ph)()
 
     def tearDown(self):
         shutil.rmtree(self.tmp_dir)

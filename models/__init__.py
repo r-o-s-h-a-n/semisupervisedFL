@@ -1,3 +1,3 @@
-from models.dense_autoencoder import DenseSupervisedModel, DenseAutoencoderModel
-from models.rotation import RotationSupervisedModel, RotationSelfSupervisedModel
-from models.conv_autoencoder import ConvSupervisedModel, ConvAutoencoderModel
+from models.dense_model import DenseSupervisedModel, DenseAutoencoderModel
+from models.conv_model import ConvSupervisedModel, ConvAutoencoderModel
+from models.rotation_model import DeepRotationSupervisedModel, DeepRotationSelfSupervisedModel, SimpleRotationSupervisedModel, SimpleRotationSelfSupervisedModel

@@ -7,17 +7,17 @@ from parameter_handler import ParameterHandler
 config = {}
 
 config['experiment'] = 'SupervisedLearningCentral'
-config['model_fn'] = 'RotationSupervisedModel'
+config['model_fn'] = 'DeepRotationSupervisedModel'
 config['sample_client_data'] = False      # must set to False when running real experiments
 config['curr_run_number'] = 0                  # always initialize as 0, unless starting from a certain run
 
 # data loading
-config['shuffle_buffer'] = 100
+config['shuffle_buffer'] = 500
 
 # training
 config['num_epochs'] = 40
 config['log_every'] = 5
-config['model_fp'] = 'rotation_cifar10_central_supervised.h5'
+config['model_fp'] = 'rotation_cifar10_central_supervised_{}.h5'
 
 config['optimizer'] = 'SGD'
 config['nesterov'] = True

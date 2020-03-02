@@ -16,7 +16,7 @@ config['shuffle_buffer'] = 500
 
 # training
 config['num_epochs'] = 10
-config['log_every'] = 1
+config['log_every'] = 2
 config['model_fp'] = 'dense_emnist_central_supervised_{}.h5'
 
 config['optimizer'] = 'SGD'

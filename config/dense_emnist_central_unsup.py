@@ -33,7 +33,7 @@ hparam_map['mask_by'] = hp.HParam('mask_by', hp.Discrete(['example']))
 hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['emnist']))
 
 hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([20]))
-hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.001]))
+hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.0001]))
 
 ######### METRICS ###############################
 metric_map = {}

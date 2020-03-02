@@ -11,7 +11,7 @@ import tensorflow_federated as tff
 from models.model import Model
 from models.initializers import ConvInitializer, DenseInitializer
 from models.layers import create_NIN_block, GlobalAveragePooling
-from rotation_utils import rotate_img_tensor
+from models.rotation_utils import rotate_img_tensor
 
 
 '''
@@ -35,15 +35,15 @@ def create_deep_feature_extractor_block(input_shape):
     model = tf.keras.models.Sequential([
         tf.keras.layers.InputLayer(input_shape),
         # block 1
-        create_NIN_block(DEEP_NCHANNELS1, 5, 'F_Block1_Conv1', input_shape=input_shape),
-        create_NIN_block(DEEP_NCHANNELS2, 1, 'F_Block1_Conv2'),
-        create_NIN_block(DEEP_NCHANNELS3, 1, 'F_Block1_Conv3'),
+        create_NIN_block(DEEP_NCHANNELS1, 5, name='F_Block1_Conv1', input_shape=input_shape),
+        create_NIN_block(DEEP_NCHANNELS2, 1, name='F_Block1_Conv2'),
+        create_NIN_block(DEEP_NCHANNELS3, 1, name='F_Block1_Conv3'),
         tf.keras.layers.MaxPool2D(pool_size=3,strides=2,padding='same', name='F_Block1_MaxPool'),
 
         # block 2
-        create_NIN_block(DEEP_NCHANNELS1, 5, 'F_Block2_Conv1'),
-        create_NIN_block(DEEP_NCHANNELS1, 1, 'F_Block2_Conv2'),
-        create_NIN_block(DEEP_NCHANNELS1, 1, 'F_Block2_Conv3'),
+        create_NIN_block(DEEP_NCHANNELS1, 5, name='F_Block2_Conv1'),
+        create_NIN_block(DEEP_NCHANNELS1, 1, name='F_Block2_Conv2'),
+        create_NIN_block(DEEP_NCHANNELS1, 1, name='F_Block2_Conv3'),
         tf.keras.layers.AveragePooling2D(pool_size=3,strides=2,padding='same', name='F_Block2_AvgPool')
     ], name='Feature_Extractor')
 
@@ -51,13 +51,14 @@ def create_deep_feature_extractor_block(input_shape):
 
 
 def create_deep_label_classifier_block(input_shape, num_classes=10):
-    input_shape = input_shape[:2] + [DEEP_NCHANNELS1]
+    # input_shape = input_shape[:2] + [DEEP_NCHANNELS1]
 
     model = tf.keras.models.Sequential([
         # block 3
-        create_NIN_block(DEEP_NCHANNELS1, 3, 'L_Block3_Conv1', input_shape=input_shape),
-        create_NIN_block(DEEP_NCHANNELS1, 1, 'L_Block3_Conv2'),
-        create_NIN_block(DEEP_NCHANNELS1, 1, 'L_Block3_Conv3'),
+        create_NIN_block(DEEP_NCHANNELS1, 3, name='L_Block3_Conv1'),
+        # create_NIN_block(DEEP_NCHANNELS1, 3, name='L_Block3_Conv1', input_shape=input_shape),
+        create_NIN_block(DEEP_NCHANNELS1, 1, name='L_Block3_Conv2'),
+        create_NIN_block(DEEP_NCHANNELS1, 1, name='L_Block3_Conv3'),
 
         GlobalAveragePooling(name='L_Global_Avg_Pool'),
         tf.keras.layers.Dense(num_classes, 
@@ -70,18 +71,19 @@ def create_deep_label_classifier_block(input_shape, num_classes=10):
 
 
 def create_deep_rotation_classifier_block(input_shape, num_classes=4):
-    input_shape = input_shape[:2] + [DEEP_NCHANNELS1]
+    # input_shape = input_shape[:2] + [DEEP_NCHANNELS1]
 
     model = tf.keras.models.Sequential([
         # block 3
-        create_NIN_block(DEEP_NCHANNELS1, 3, 'R_Block3_Conv1', input_shape=input_shape),
-        create_NIN_block(DEEP_NCHANNELS1, 1, 'R_Block3_Conv2'),
-        create_NIN_block(DEEP_NCHANNELS1, 1, 'R_Block3_Conv3'),
+        # create_NIN_block(DEEP_NCHANNELS1, 3, name='R_Block3_Conv1', input_shape=input_shape),
+        create_NIN_block(DEEP_NCHANNELS1, 3, name='R_Block3_Conv1'),
+        create_NIN_block(DEEP_NCHANNELS1, 1, name='R_Block3_Conv2'),
+        create_NIN_block(DEEP_NCHANNELS1, 1, name='R_Block3_Conv3'),
 
         # block 4
-        create_NIN_block(DEEP_NCHANNELS1, 3, 'R_Block4_Conv1'),
-        create_NIN_block(DEEP_NCHANNELS1, 1, 'R_Block4_Conv2'),
-        create_NIN_block(DEEP_NCHANNELS1, 1, 'R_Block4_Conv3'),
+        create_NIN_block(DEEP_NCHANNELS1, 3, name='R_Block4_Conv1'),
+        create_NIN_block(DEEP_NCHANNELS1, 1, name='R_Block4_Conv2'),
+        create_NIN_block(DEEP_NCHANNELS1, 1, name='R_Block4_Conv3'),
 
         GlobalAveragePooling(name='R_Global_Avg_Pool'),
         tf.keras.layers.Dense(num_classes,
@@ -100,33 +102,23 @@ def create_simple_feature_extractor_block(input_shape):
         create_NIN_block(SIMPLE_NCHANNELS2, 1, name='F_Block1_Conv2'),
         create_NIN_block(SIMPLE_NCHANNELS2, 1, name='F_Block1_Conv3'),
 
-        tf.keras.layers.MaxPooling2D(3, strides=2, padding='valid', name='F_maxpool')
-
+        tf.keras.layers.MaxPooling2D(3, strides=2, padding='same', name='F_maxpool')
     ], name='Feature_Extractor')
 
     return model
 
 
 def create_simple_label_classifier_block(input_shape, num_classes=10):
-    input_shape = input_shape[:2] + [SIMPLE_NCHANNELS2]
+    # input_shape = input_shape[:2] + [SIMPLE_NCHANNELS2]
     
     model = tf.keras.models.Sequential([
         # block 2
-        create_NIN_block(SIMPLE_NCHANNELS2, 3, name='L_Block2_Conv1', input_shape=input_shape),
+        # create_NIN_block(SIMPLE_NCHANNELS2, 3, name='L_Block2_Conv1', input_shape=input_shape),
+        create_NIN_block(SIMPLE_NCHANNELS2, 3, name='L_Block2_Conv1'),
         create_NIN_block(SIMPLE_NCHANNELS2, 1, name='L_Block2_Conv2'),
         create_NIN_block(SIMPLE_NCHANNELS2, 1, name='L_Block2_Conv3'),
 
-        tf.keras.layers.AveragePooling2D(3, strides=2, padding='valid', name='L_avgpool'),
-
-        create_NIN_block(SIMPLE_NCHANNELS2, 3, name='L_Block3_Conv1'),
-        create_NIN_block(SIMPLE_NCHANNELS2, 1, name='L_Block3_Conv2'),
-        create_NIN_block(SIMPLE_NCHANNELS2, 1, name='L_Block3_Conv3'),
-
-        # create_NIN_block(NCHANNELS2, 3, name='Block4_Conv1'),
-        # # create_NIN_block(NCHANNELS2, 1, name='Block3_Conv2'),
-        # create_NIN_block(NCHANNELS2, 1, name='Block4_Conv3'),
-
-        tf.keras.layers.MaxPooling2D(3, strides=2, padding='valid', name='L_maxpool'),
+        tf.keras.layers.MaxPooling2D(3, strides=2, padding='same', name='L_maxpool'),
 
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(512, 
@@ -148,7 +140,8 @@ def create_simple_rotation_classifier_block(input_shape, num_classes=4):
 
     model = tf.keras.models.Sequential([
         # block 2
-        create_NIN_block(SIMPLE_NCHANNELS1, 5, name='R_Block2_Conv1', input_shape=input_shape),
+        create_NIN_block(SIMPLE_NCHANNELS1, 5, name='R_Block2_Conv1'),
+        # create_NIN_block(SIMPLE_NCHANNELS1, 5, name='R_Block2_Conv1', input_shape=input_shape),
         create_NIN_block(SIMPLE_NCHANNELS2, 1, name='R_Block2_Conv2'),
         create_NIN_block(SIMPLE_NCHANNELS2, 1, name='R_Block2_Conv3'),
 
@@ -208,7 +201,6 @@ class RotationSupervisedModel(Model):
         def element_fn(element):
             img = element['image']
             img = tf.cast(img, tf.float32)
-            # img = tf.transpose(img, [1, 2, 0]) # convert NCHW to NHWC
             img = tf.math.subtract(img, tf.convert_to_tensor([255*0.49139968, 255*0.48215841, 255*0.44653091], dtype=tf.float32))
             img = tf.math.divide(img, tf.convert_to_tensor([255*0.24703223, 255*0.24348513, 255*0.26158784], dtype=tf.float32))
             
@@ -244,7 +236,7 @@ class RotationSupervisedModel(Model):
 
 class DeepRotationSupervisedModel(RotationSupervisedModel):
     def __init__(self, ph):
-        super(DeepRotationSupervisedModel).__init__(ph)
+        super(DeepRotationSupervisedModel, self).__init__(ph)
 
     def __call__(self):
         '''
@@ -272,7 +264,7 @@ class DeepRotationSupervisedModel(RotationSupervisedModel):
 
 class SimpleRotationSupervisedModel(RotationSupervisedModel):
     def __init__(self, ph):
-        super(SimpleRotationSupervisedModel).__init__(ph)
+        super(SimpleRotationSupervisedModel, self).__init__(ph)
 
     def __call__(self):
         '''
@@ -344,7 +336,6 @@ class RotationSelfSupervisedModel(Model):
             img = tf.cast(element['image'], tf.float32)
             img = tf.math.subtract(img, tf.convert_to_tensor([255*0.49139968, 255*0.48215841, 255*0.44653091], dtype=tf.float32))
             img = tf.math.divide(img, tf.convert_to_tensor([255*0.24703223, 255*0.24348513, 255*0.26158784], dtype=tf.float32))
-            img = tf.transpose(img, [2, 0, 1]) # convert NHWC to NCHW
 
             rotated_elements = (
                 tf.data.Dataset.from_tensor_slices([rotate_img_tensor(img, rot) for rot in [0, 90, 180, 270]]),
@@ -383,12 +374,12 @@ class RotationSelfSupervisedModel(Model):
             shuffle_buffer).flat_map(element_fn).repeat(num_epochs).batch(batch_size)
 
 
-class SimpleRotationSupervisedModel(RotationSupervisedModel):
+class SimpleRotationSelfSupervisedModel(RotationSelfSupervisedModel):
     '''
     Predicts rotation of images
     '''
     def __init__(self, ph):
-        super(SimpleRotationSupervisedModel).__init__(self, ph)
+        super(SimpleRotationSelfSupervisedModel, self).__init__(ph)
 
     def __call__(self):
         '''
@@ -409,12 +400,12 @@ class SimpleRotationSupervisedModel(RotationSupervisedModel):
         return model    
 
 
-class DeepRotationSelfSupervisedModel(RotationSupervisedModel):
+class DeepRotationSelfSupervisedModel(RotationSelfSupervisedModel):
     '''
     Predicts rotation of images
     '''
     def __init__(self, ph):
-        super(DeepRotationSelfSupervisedModel).__init__(self, ph)
+        super(DeepRotationSelfSupervisedModel, self).__init__(ph)
 
     def __call__(self):
         '''

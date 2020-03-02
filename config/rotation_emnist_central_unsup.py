@@ -7,7 +7,7 @@ from parameter_handler import ParameterHandler
 config = {}
 
 config['experiment'] = 'SupervisedLearningCentral'
-config['model_fn'] = 'DeepRotationSelfSupervisedModel'
+config['model_fn'] = 'SimpleRotationSelfSupervisedModel'
 config['sample_client_data'] = False      # must set to False when running real experiments
 config['curr_run_number'] = 0                  # always initialize as 0, unless starting from a certain run
 
@@ -15,13 +15,13 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 500
 
 # training
-config['num_epochs'] = 40
-config['log_every'] = 5
-config['model_fp'] = 'rotation_cifar10_central_unsup_{}.h5'
+config['num_epochs'] = 10
+config['log_every'] = 2
+config['model_fp'] = 'rotation_emnist_central_unsup_{}.h5'
 
 config['optimizer'] = 'SGD'
-config['nesterov'] = True
-config['momentum'] = 0.9
+config['nesterov'] = False
+config['momentum'] = 0.99
 config['decay'] = 0.0
 
 ######### EXPERIMENTAL PARAMETERS ###############
@@ -30,10 +30,10 @@ hparam_map = {}
 hparam_map['supervised_mask_ratio'] = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0]))
 hparam_map['unsupervised_mask_ratio'] = hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0]))
 hparam_map['mask_by'] = hp.HParam('mask_by', hp.Discrete(['example']))
-hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['cifar10central']))
+hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['emnist']))
 
-hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([128]))
-hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.02]))
+hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([20]))
+hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.0001]))
 
 ######### METRICS ###############################
 metric_map = {}

@@ -178,8 +178,8 @@ class RotationSupervisedModel(Model):
             return (tf.expand_dims(element['pixels'], 2),
                     tf.reshape(element['label'], [1]))
 
-        return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
-            num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
+        return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).map(element_fn
+            ).repeat(num_epochs).shuffle(shuffle_buffer).batch(batch_size)
 
     def preprocess_cifar100(self,
                     dataset, 
@@ -201,8 +201,8 @@ class RotationSupervisedModel(Model):
             return (img,
                     tf.reshape(element['coarse_label'], [1]))
 
-        return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
-            num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
+        return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).map(element_fn
+            ).repeat(num_epochs).shuffle(shuffle_buffer).batch(batch_size)
 
     def preprocess_cifar10central(self,
                     dataset, 
@@ -224,8 +224,8 @@ class RotationSupervisedModel(Model):
             return (img,
                     tf.reshape(element['label'], [1]))
 
-        return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).repeat(
-            num_epochs).map(element_fn).shuffle(shuffle_buffer).batch(batch_size)
+        return dataset.filter(lambda x: not x['is_masked_supervised'] if 'is_masked_supervised' in x else True).map(element_fn
+            ).repeat(num_epochs).shuffle(shuffle_buffer).batch(batch_size)
 
 
 class DeepRotationSupervisedModel(RotationSupervisedModel):

@@ -35,8 +35,8 @@ hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['cifar100']))
 hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([20]))
 hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.01]))
 
-hparam_map['num_clients_per_round'] = hp.HParam('num_clients_per_round', hp.Discrete([100]))
-hparam_map['num_epochs'] = hp.HParam('num_epochs', hp.Discrete([10]))
+hparam_map['num_clients_per_round'] = hp.HParam('num_clients_per_round', hp.Discrete([20]))
+hparam_map['num_epochs'] = hp.HParam('num_epochs', hp.Discrete([5]))
 
 ######### METRICS ###############################
 metric_map = {}

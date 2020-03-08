@@ -12,7 +12,7 @@ config['sample_client_data'] = False      # must set to False when running real 
 config['curr_run_number'] = 0                  # always initialize as 0, unless starting from a certain run
 
 # data loading
-config['shuffle_buffer'] = 500
+config['shuffle_buffer'] = 100
 
 # training
 config['num_rounds'] = 500
@@ -29,7 +29,7 @@ config['decay'] = 0.0
 ######### EXPERIMENTAL PARAMETERS ###############
 hparam_map = {}
 
-hparam_map['supervised_mask_ratio'] = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0]))
+hparam_map['supervised_mask_ratio'] = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0, 0.99, 0.9999]))
 hparam_map['unsupervised_mask_ratio'] = hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0]))
 hparam_map['mask_by'] = hp.HParam('mask_by', hp.Discrete(['example']))
 hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['cifar100']))
@@ -37,7 +37,7 @@ hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['cifar100']))
 hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([20]))
 hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.01]))
 
-hparam_map['num_clients_per_round'] = hp.HParam('num_clients_per_round', hp.Discrete([20]))
+hparam_map['num_clients_per_round'] = hp.HParam('num_clients_per_round', hp.Discrete([10]))
 hparam_map['num_epochs'] = hp.HParam('num_epochs', hp.Discrete([5]))
 
 ######### METRICS ###############################

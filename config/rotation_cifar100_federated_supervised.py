@@ -7,7 +7,7 @@ from parameter_handler import ParameterHandler
 config = {}
 
 config['experiment'] = 'SupervisedLearningFL'
-config['model_fn'] = 'SimpleRotationSupervisedModel'
+config['model_fn'] = 'DeepRotationSupervisedModel'
 config['sample_client_data'] = False      # must set to False when running real experiments
 config['curr_run_number'] = 0                  # always initialize as 0, unless starting from a certain run
 

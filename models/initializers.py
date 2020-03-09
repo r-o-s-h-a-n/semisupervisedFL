@@ -44,7 +44,7 @@ class ConvInitializer(tf.keras.initializers.Initializer):
             n = self.kernel_size * self.kernel_size * self.out_channels
         else:
             n = self.kernel_size[0] * self.kernel_size[1] * self.out_channels
-        stddev = math.sqrt(8.0/n)
+        stddev = math.sqrt(16.0/n)
         return random_ops.random_normal(shape, 0.0, stddev, dtype, seed=self.seed)
 
     def get_config(self):
@@ -74,7 +74,7 @@ class DenseInitializer(tf.keras.initializers.Initializer):
         if dtype is None:
             dtype = self.dtype
         
-        stddev = math.sqrt(8.0 / self.out_channels)
+        stddev = math.sqrt(16.0 / self.out_channels)
         return random_ops.random_normal(shape, 0.0, stddev, dtype, seed=self.seed)
 
     def get_config(self):

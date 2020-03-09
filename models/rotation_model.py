@@ -32,7 +32,7 @@ SIMPLE_NCHANNELS1 = 32
 SIMPLE_NCHANNELS2 = 64
 
 INPUT_SHAPES = {'emnist': [28,28,1], 'cifar100': [32,32,3], 'cifar10central': [32,32,3]}
-OUTPUT_SHAPES = {'emnist': 10, 'cifar100': 20, 'cifar10central': 10}
+OUTPUT_SHAPES = {'emnist': 10, 'cifar100': 100, 'cifar10central': 10}
 
 
 def create_deep_feature_extractor_block(input_shape):

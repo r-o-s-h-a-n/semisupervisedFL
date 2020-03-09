@@ -15,7 +15,7 @@ config['curr_run_number'] = 0                  # always initialize as 0, unless 
 config['shuffle_buffer'] = 100
 
 # training
-config['num_rounds'] = 500
+config['num_rounds'] = 1000
 config['log_every'] = 10
 config['model_fp'] = 'rotation_cifar100_federated_supervised_{}.h5'
 
@@ -37,8 +37,8 @@ hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['cifar100']))
 hparam_map['batch_size'] = hp.HParam('batch_size', hp.Discrete([20]))
 hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.01]))
 
-hparam_map['num_clients_per_round'] = hp.HParam('num_clients_per_round', hp.Discrete([10]))
-hparam_map['num_epochs'] = hp.HParam('num_epochs', hp.Discrete([5]))
+hparam_map['num_clients_per_round'] = hp.HParam('num_clients_per_round', hp.Discrete([20])) #10
+hparam_map['num_epochs'] = hp.HParam('num_epochs', hp.Discrete([20])) #10
 
 ######### METRICS ###############################
 metric_map = {}

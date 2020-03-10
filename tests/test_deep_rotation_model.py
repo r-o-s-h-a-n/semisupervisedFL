@@ -22,7 +22,7 @@ class TestRotationModel(unittest.TestCase):
                 'learning_rate': 10.0,
                 'dataset': 'cifar100'}
 
-        keras_model_fn = mdl.SimpleRotationSelfSupervisedModel(ph)
+        keras_model_fn = mdl.DeepRotationSelfSupervisedModel(ph)
         preprocess_fn = getattr(keras_model_fn, 'preprocess_{}'.format(ph['dataset']))
 
         dataloader = dta.DataLoader(
@@ -68,7 +68,7 @@ class TestRotationModel(unittest.TestCase):
                 'dataset': 'cifar100',
                 'pretrained_model_fp': self.model_fp}
 
-        self.transfer_model = mdl.SimpleRotationSupervisedModel(ph)()
+        self.transfer_model = mdl.DeepRotationSupervisedModel(ph)()
 
     def tearDown(self):
         shutil.rmtree(self.tmp_dir)
@@ -87,15 +87,19 @@ class TestRotationModel(unittest.TestCase):
 
     def test_transfer_model(self):
         # encoder weights should be same
-        try:
-            np.testing.assert_allclose(self.old_model.get_weights()[0], self.transfer_model.get_weights()[0])
-        except AssertionError:
-            self.fail('Saved encoder model weights are not all close')
+        for i in range(18):
+            try:
+                np.testing.assert_allclose(self.old_model.get_weights()[i], self.transfer_model.get_weights()[i])
+            except AssertionError:
+                self.fail('Saved encoder model weights are not all close')
 
-        # decoder weights should be different
-        self.assertRaises(AssertionError, np.testing.assert_allclose, self.old_model.get_weights()[-1], 
-                                                                    self.transfer_model.get_weights()[-1])
-
+        # decoder conv and dense layer weights should be different
+        for i in range(-18, 0, 3):
+            self.assertRaises(AssertionError, np.testing.assert_allclose, self.old_model.get_weights()[i], 
+                                                                        self.transfer_model.get_weights()[i])
+        for i in [-2, -1]:
+            self.assertRaises(AssertionError, np.testing.assert_allclose, self.old_model.get_weights()[i], 
+                                                                        self.transfer_model.get_weights()[i])
 
 if __name__ == '__main__':
     unittest.main()

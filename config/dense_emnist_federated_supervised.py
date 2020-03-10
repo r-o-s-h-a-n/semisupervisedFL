@@ -24,12 +24,12 @@ config['nesterov'] = False
 config['momentum'] = 0.99
 config['decay'] = 0.0
 
-config['pretrained_model_fp'] = 'logs/dense_emnist_federated_unsup/run_0/dense_emnist_federated_unsup_final_model.h5'
+config['pretrained_model_fp'] = 'saved_logs/dense_emnist_federated_unsup/run_0/dense_emnist_federated_unsup_final_model.h5'
 
 ######### EXPERIMENTAL PARAMETERS ###############
 hparam_map = {}
 
-hparam_map['supervised_mask_ratio'] = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0, 0.8, 0.9, 0.95, 0.98, 0.99]))
+hparam_map['supervised_mask_ratio'] = hp.HParam('supervised_mask_ratio', hp.Discrete([0.0, 0.8, 0.9, 0.95, 0.99]))
 hparam_map['unsupervised_mask_ratio'] = hp.HParam('unsupervised_mask_ratio', hp.Discrete([0.0]))
 hparam_map['mask_by'] = hp.HParam('mask_by', hp.Discrete(['example']))
 hparam_map['dataset'] = hp.HParam('dataset', hp.Discrete(['emnist']))
@@ -39,6 +39,9 @@ hparam_map['learning_rate'] = hp.HParam('learning_rate', hp.Discrete([0.001]))
 
 hparam_map['num_clients_per_round'] = hp.HParam('num_clients_per_round', hp.Discrete([100]))
 hparam_map['num_epochs'] = hp.HParam('num_epochs', hp.Discrete([10]))
+
+hparam_map['fine_tune'] = hp.HParam('fine_tune', hp.Discrete([False]))
+
 
 ######### METRICS ###############################
 metric_map = {}

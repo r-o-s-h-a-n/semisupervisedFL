@@ -14,10 +14,10 @@ INPUT_SIZE = {'emnist': 784, 'cifar100': 3072, 'cifar10central': 3072}
 OUTPUT_SIZE = {'emnist': 10, 'cifar100': 20, 'cifar10central': 10}
 
 
-def create_encoder_keras_model(input_size):
+def create_encoder_keras_model(input_size, trainable=True):
     model = tf.keras.models.Sequential([
         tf.keras.layers.Dense(
-            ENCODER_SIZE, activation=tf.nn.relu, input_shape=(input_size,), name='encoder1')
+            ENCODER_SIZE, activation=tf.nn.relu, input_shape=(input_size,), name='encoder1', trainable=trainable)
     ], name='encoder')
     return  model
 
@@ -44,15 +44,23 @@ class DenseSupervisedModel(Model):
         self.input_size = INPUT_SIZE[self.ph['dataset']]
         self.output_size = OUTPUT_SIZE[self.ph['dataset']]
         self.pretrained_model_fp = self.ph.setdefault('pretrained_model_fp', None)
+        self.fine_tune = self.ph['fine_tune']
 
         if self.pretrained_model_fp:
             print('training on pretrained model')
+        else:
+            print('training from scratch without pretrained model')
+
+        if self.fine_tune:
+            print('fine tuning pretrained model')
+        else:
+            print('pretrained model weights are frozen')
 
     def __call__(self):
         '''
         Returns a compiled keras model.
         '''
-        encoder_model = create_encoder_keras_model(self.input_size)
+        encoder_model = create_encoder_keras_model(self.input_size, trainable=self.fine_tune)
 
         model = tf.keras.models.Sequential([
             encoder_model,

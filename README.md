@@ -28,9 +28,9 @@ To build a new experiment you may wish to make the following modifications:
 3. Add a new experiment loop algorithm to `experiments.py`. Currently only a supervised training experiment loop is specified. It is likely that this algorithm can be extended to self supervised and semisupervised settings by just swapping the model in `models.py`.
 
 ### Outline of Repository ###
-`models/` contains models you want to try running an experiment on
-`config/` contains config files. Config files contain experimental parameters for the specific experiment you want to run.
-`tests/` contains tests for some of the operations in the repo
-`dataloader.py` contains functions for loading data into models
-`experiments.py` contains experiment loops
-`main.py` is the script that executes an experiment by applying a config file to an experiment loop
+1. `models/` contains models you want to try running an experiment on
+2. `config/` contains config files. Config files contain experimental parameters for the specific experiment you want to run.
+3. `tests/` contains tests for some of the operations in the repo
+4. `dataloader.py` contains functions for loading data into models
+5. `experiments.py` contains experiment loops
+6. `main.py` is the script that executes an experiment by applying a config file to an experiment loop

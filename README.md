@@ -26,3 +26,11 @@ To build a new experiment you may wish to make the following modifications:
 1. Add a new config file to `config/` for a new experiment specifying different hyperparameters you want to try as well as model and data configurations.
 2. Add a new model to the file `models.py`. A new model must inherit from the class `Model` and specify a `__call__` method and a `preprocess` method. The `__call__` method must return a compiled tf keras model. The `preprocess` method must preprocess a tf Dataset to be trained by the model.
 3. Add a new experiment loop algorithm to `experiments.py`. Currently only a supervised training experiment loop is specified. It is likely that this algorithm can be extended to self supervised and semisupervised settings by just swapping the model in `models.py`.
+
+### Outline of Repository ###
+`models/` contains models you want to try running an experiment on
+`config/` contains config files. Config files contain experimental parameters for the specific experiment you want to run.
+`tests/` contains tests for some of the operations in the repo
+`dataloader.py` contains functions for loading data into models
+`experiments.py` contains experiment loops
+`main.py` is the script that executes an experiment by applying a config file to an experiment loop

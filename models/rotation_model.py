@@ -11,7 +11,6 @@ import tensorflow_federated as tff
 from models.model import Model
 from models.initializers import ConvInitializer, DenseInitializer
 from models.layers import create_NIN_block, GlobalAveragePooling
-from models.rotation_utils import rotate_img_tensor
 
 
 '''

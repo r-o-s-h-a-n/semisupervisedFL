@@ -14,12 +14,13 @@ warnings.simplefilter('ignore')
 
 def get_client_data(dataset_name, mask_by, mask_ratios=None, sample_client_data=False, shuffle_buffer=100):
   '''
-  dataset_name -- str,          name of dataset
-  mask_by -- str,             indicates if we will mask by clients or examples
-  mask_ratios -- dict(float), gives mask ratios for models 
+  dataset_name - str,        name of dataset
+  mask_by - str,             indicates if we will mask by clients or examples
+  mask_ratios - dict(float), gives mask ratios for models 
                               is of format {'supervised':0.0, 'unsupervised':0.0}
-  sample_dataset -- bool,     if true, will return a small ClientData dataset
+  sample_client_data - bool, if true, will return a small ClientData dataset
                               containing 100 clients with max 100 examples each
+  shuffle_buffer - int,      TF shuffle buffer size
   '''
   assert dataset_name in ('emnist', 'cifar100', 'cifar10central')
   assert mask_by in ('client', 'example'), 'mask_by must be `client` or `example`'
@@ -64,9 +65,9 @@ def get_sample_client_data(client_data, num_clients, num_examples):
     Generates a client dataset with maximum `num_clients` number of clients and 
     `num_examples` number of examples per client
 
-    client_data: ClientData, client dataset
-    num_clients: int,         maximum number of clients in returned dataset
-    num_examples: int,        maximum number of examples per client in returned dataset
+    client_data - TFF ClientData,   client dataset
+    num_clients - int,              maximum number of clients in returned dataset
+    num_examples - int,             maximum number of examples per client in returned dataset
     '''
     def get_dataset(client_id):
       return client_data.create_tf_dataset_for_client(client_id).take(num_examples)
@@ -99,11 +100,14 @@ def mask_examples(client_data, mask_ratio, mask_type, shuffle_buffer=500, seed=N
     Masks mask_ratio fraction of randomly selected examples on each client.
 
     Args:
-        client_data - ClientData object containing federated dataset
-        mask_ratio - float, fraction of example labels to mask
+        client_data - TFF ClientData,   contains federated dataset
+        mask_ratio - float,             fraction of example labels to mask
+        mask_type - str,                mask supervised or unsupervised
+        shuffle_buffer - int,           TF shuffle buffer size
+        seed - int,                     random seed
     Returns:
         client_data - ClientData object, identical to client_data argument but 
-        with additional attribute `mask` boolean for each example
+          with additional attribute `mask` boolean for each example
     '''
     def get_example_ids_generator():
       # counts number of examples per client and returns a tuple for each client id
@@ -136,6 +140,9 @@ def mask_clients(client_data, mask_ratio, mask_type, shuffle_buffer=500, seed=No
     Args:
         client_data - ClientData object containing federated dataset
         mask_ratio - float, fraction of total clients to be masked
+        mask_type - str,                mask supervised or unsupervised
+        shuffle_buffer - int,           TF shuffle buffer size
+        seed - int,                     random seed
     Returns:
         client_data - ClientData object, identical to client_data argument but 
         with additional attribute `is_masked` boolean for each example
